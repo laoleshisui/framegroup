@@ -2,7 +2,7 @@
 #define FRAMEITF_H
 
 #include <string>
-#include <generated_proto/frame_data.pb.h>
+#include <pframe/frame_data.pb.h>
 
 namespace aoles{
 
@@ -11,7 +11,7 @@ using pframe::Operation;
 
 class Position{
 public:
-    Position() = delete;
+    Position() = default;
     Position(float x, float y)
     :x_(x),
     y_(y)
@@ -35,12 +35,15 @@ public:
 class FrameItf
 {
 public:
+    FrameItf()=default;
+
     pframe::FrameData ToProto(){
         pframe::FrameData pframe;
         pframe.set_idx(idx_);
         pframe.set_frame_type(type_);
         pframe.set_ref_frame_idx(ref_frame_idx_);
-        pframe.set_allocated_position(&(position_.ToProto()));
+        pframe::Position pos = position_.ToProto();
+        pframe.set_allocated_position(&pos);
         for(Operation& op : operation_){
                 pframe.add_operation(op);
         }
@@ -52,8 +55,8 @@ public:
         type_ = pframe.frame_type();
         ref_frame_idx_ = pframe.ref_frame_idx();
         position_ = Position(pframe.position().x(), pframe.position().y());
-        for (const int& op : pframe.operation()){
-            operation_.emplace_back(op);   
+        for(int i = 0; i < pframe.operation_size(); i++){
+            operation_.emplace_back(pframe.operation(i));
         }
     }
 

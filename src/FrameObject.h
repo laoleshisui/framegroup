@@ -9,7 +9,7 @@
 #include <string>
 #include <functional>
 
-#include <core/Type.h>
+#include <Type.h>
 
 #include "FrameItf.h"
 #include "FrameEncoder.h"
@@ -28,13 +28,15 @@ public:
     friend class FrameGroup;
 
     FrameObject();
+    FrameObject(FrameObject&)=delete;
+    explicit FrameObject(FrameObject&& from)=default;
     ~FrameObject();
 
 private:
     uint64_t id_;
     // Monotonically increasing frame idx
-    std::vector<FrameItf> local_frames_;//from ui_thread, to socket thread
-    std::vector<FrameItf> remote_frames_;//from socket_thread, to ui_thread
+    std::vector<std::shared_ptr<FrameItf>> local_frames_;//from ui_thread, to socket thread
+    std::vector<std::shared_ptr<FrameItf>> remote_frames_;//from socket_thread, to ui_thread
     std::unique_ptr<FrameEncoder> encoder_;
     std::unique_ptr<FrameDecoder> decoder_;
 

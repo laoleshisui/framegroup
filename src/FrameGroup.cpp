@@ -1,6 +1,6 @@
 #include "FrameGroup.h"
 
-#include <generated_proto/frame.pb.h>
+#include <pframe/frame.pb.h>
 
 using namespace aoles;
 
@@ -32,7 +32,7 @@ void FrameGroup::AddCapturer(uint64_t local_id, FrameCapturer* capturer){
     //local id will be replaced by remote id soon.
     captured_objects_id_.insert(local_id);
     frame_objects_.emplace(local_id, FrameObject());
-    capturer->AddSink(frame_objects_p[local_id]);
+    capturer->AddSink(&(frame_objects_[local_id]));
 }
 
 void FrameGroup::RegisterCaptureredOnServer(){
@@ -60,7 +60,6 @@ void FrameGroup::InitFrameObjects(){
     for(CORE_MAP<uint64_t, FrameObject>::value_type& i : frame_objects_){
         i.second.id_ = i.first;
         i.second.SendPacket = std::bind(&FrameGroup::SendPacket, this, i.first, std::placeholders::_1);
-        i.second.SendFrame = std::bind(&FrameGroup::SendFrame, this, i.first, std::placeholders::_1);
     }
 }
 
@@ -135,7 +134,7 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
             }
             captured_objects_id_.swap(registered_objects_id);
         }
-        else if(event.code() == pframe::EventCode::UNREGISTERED_OBJECT){
+        else if(event.code() == pframe::EventCode::UNREGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
             registered_objects.ParseFromString(std::move(event.data()));
 
@@ -158,19 +157,19 @@ void FrameGroup::EffectCaculate(uint64_t object_id){
     if(captured_objects_id_.find(object_id) != captured_objects_id_.end()){
         // local frame added
         for(const CORE_SET<uint64_t>::value_type& id : uncaptured_objects_id_){
-            ReviseEffect(&(frame_objects_[object_id]), &*(frame_objects_[object_id].local_frames_.end()), &(frame_objects_[id]), &*(frame_objects_[id].remote_frames_.end()));
+            ReviseEffect(&(frame_objects_[object_id]), frame_objects_[object_id].local_frames_.end()->get(), &(frame_objects_[id]), frame_objects_[id].remote_frames_.end()->get());
         }
     }else{
         // remote frame received
         // If the network is fine, there is no influence. The main situation is a bad network between CS 
         for(const CORE_SET<uint64_t>::value_type& id : captured_objects_id_){
-            for (std::vector<FrameItf>::reverse_iterator it = frame_objects_[id].local_frames_.rbegin();
+            for (std::vector<std::shared_ptr<FrameItf>>::reverse_iterator it = frame_objects_[id].local_frames_.rbegin();
                 it != frame_objects_[id].local_frames_.rend();
                 it++){
-                if(it->idx_ == frame_objects_[object_id].remote_frames_.end()->idx_){
-                    ReviseEffect(&(frame_objects_[id]), &(*it), &(frame_objects_[object_id]), &(*(frame_objects_[object_id].remote_frames_.end())));
+                if((*it)->idx_ == (*(frame_objects_[object_id].remote_frames_.end()))->idx_){
+                    ReviseEffect(&(frame_objects_[id]), it->get(), &(frame_objects_[object_id]), frame_objects_[object_id].remote_frames_.end()->get());
                 }
-                else if(it->idx_ < frame_objects_[object_id].remote_frames_.end()->idx_){
+                else if((*it)->idx_ < (*(frame_objects_[object_id].remote_frames_.end()))->idx_){
                     break;
                 }
                 
@@ -190,7 +189,8 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
             return;
         }
     }else{
-        decider->effected_map_.insert(decider_frame->idx_, {other->id_});
+        CORE_SET<uint64_t> set = {other->id_};
+        decider->effected_map_.emplace(decider_frame->idx_, std::move(set));
     }
 
     //TODO effect now!

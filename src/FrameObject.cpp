@@ -5,6 +5,18 @@ using namespace aoles;
 FrameObject::FrameObject()
 :id_(0)
 {}
+
+// FrameObject::FrameObject(FrameObject&& from)
+// :id_(from.id_),
+// local_frames_(std::move(from.local_frames_)),
+// remote_frames_(std::move(from.remote_frames_)),
+// encoder_(std::move(from.encoder_)),
+// decoder_(std::move(from.decoder_)),
+// effected_map_(std::move(from.effected_map_)),   
+// SendPacket(from.SendPacket)
+// {
+// }
+
 FrameObject::~FrameObject(){}
 
 void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
