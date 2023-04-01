@@ -10,7 +10,8 @@ FrameEncoder::FrameEncoder()
 FrameEncoder::~FrameEncoder(){}
 
 std::shared_ptr<PacketItf> FrameEncoder::Encode(std::shared_ptr<FrameItf> frame){
-    pframe::FrameData pframe = frame->ToProto();
+    pframe::FrameData pframe;
+    frame->ToProto(pframe);
 
     std::shared_ptr<PacketItf> packet = std::make_shared<PacketItf>();
     packet->data_ = pframe.SerializeAsString();

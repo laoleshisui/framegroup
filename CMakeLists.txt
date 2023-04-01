@@ -57,6 +57,11 @@ find_package(AProto REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} AProto::AProto)
 list(APPEND target_dependencies "AProto")
 
+#libtaskqueue
+find_package(libtaskqueue REQUIRED CONFIG)
+target_link_libraries(${PROJECT_NAME} libtaskqueue::libtaskqueue)
+list(APPEND target_dependencies "libtaskqueue")
+
 ##-----------######  GenerateCmakePackage  ######-----------
 SET(CMAKE_INSTALL_LIBDIR lib)
 SET(CMAKE_INSTALL_BINDIR bin)

@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include <mutex>
 
 #include <core/Type.h>
 

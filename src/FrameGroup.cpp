@@ -28,11 +28,13 @@ void FrameGroup::Login(){
     client_.SendToServer(login.SerializeAsString());
 }
 
-void FrameGroup::AddCapturer(uint64_t local_id, FrameCapturer* capturer){
+void FrameGroup::AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer){
     //local id will be replaced by remote id soon.
     captured_objects_id_.insert(local_id);
     frame_objects_.emplace(local_id, FrameObject());
     capturer->AddSink(&(frame_objects_[local_id]));
+
+    frame_capturers_.emplace(local_id, capturer);
 }
 
 void FrameGroup::RegisterCaptureredOnServer(){
@@ -83,6 +85,7 @@ void FrameGroup::SendPacket(uint64_t id, std::shared_ptr<PacketItf> packet){
     else{
         client_.SendToServer(frame.SerializeAsString());
     }
+    EffectCaculate(id);
 }
 
 void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
@@ -121,11 +124,22 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
             
             CORE_SET<uint64_t> registered_objects_id;
             int i = 0;
+            //Assert captured_objects_id_.size() = registered_objects.size()
             for (const uint64_t& local_id : captured_objects_id_){
                 uint64_t remote_id = registered_objects.ids(i++);
-                CORE_MAP<uint64_t, FrameObject>::node_type pair = frame_objects_.extract(local_id);
-                pair.key() = remote_id;
-                frame_objects_.insert(std::move(pair));
+                {
+                    //update frame_objects_' key
+                    CORE_MAP<uint64_t, FrameObject>::node_type pair = frame_objects_.extract(local_id);
+                    pair.key() = remote_id;
+                    frame_objects_.insert(std::move(pair));
+                }
+
+                {
+                    //update frame_capturers_' key
+                    CORE_MAP<uint64_t, std::shared_ptr<FrameCapturer>>::node_type pair = frame_capturers_.extract(local_id);
+                    pair.key() = remote_id;
+                    frame_capturers_.insert(std::move(pair));
+                }
 
                 registered_objects_id.insert(remote_id);
                 if(OnUpdateCapturedLocalId){
@@ -180,7 +194,7 @@ void FrameGroup::EffectCaculate(uint64_t object_id){
 
 
 void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, FrameObject* other, FrameItf* other_frame){
-    // TODO must judge whether the local frame at this idx has effected this object. If have done, break.
+    // TODO must judge whether the local frame at this idx has effected this object. If have done, pass.
     CORE_MAP<uint64_t, CORE_SET<uint64_t>>::iterator effected_pair = decider->effected_map_.find(decider_frame->idx_);
     if(effected_pair != decider->effected_map_.end()){
         if(effected_pair->second.find(other->id_) != effected_pair->second.end()){
@@ -193,6 +207,45 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
         decider->effected_map_.emplace(decider_frame->idx_, std::move(set));
     }
 
-    //TODO effect now!
+    //effect now!
     //Attach effect in the nearest Frame
+    for(Operation& op : decider_frame->operations_){
+        if(op.type_ == pframe::RANGE_DAMAGE){
+            /**
+             * args:
+             * 1: float range
+             * 2: int64_t damage
+            */
+            float range = std::stof(op.args_[0]);
+            int64_t damage = std::stol(op.args_[1]);
+
+            float distance = Position::Distance(decider_frame->position_, other_frame->position_);
+            if(distance <= range){
+                Operation effect;
+                effect.type_ = pframe::DAMAGED;
+                effect.args_ = {std::to_string(other->id_), std::to_string(damage)};
+                
+                frame_capturers_[decider->id_]->AddOperation(std::move(effect));
+                //TODO predict the effected object's ui.
+                //Only relay/p2p the effect to the effected object by P frame or multicast it to all?
+            }
+        }
+        else if(op.type_ == pframe::DAMAGED){
+            /**
+             * args:
+             * 1: uint64_t id
+             * 2: int32_t damage
+            */
+            uint64_t id = std::stoul(op.args_[0]);
+            int32_t damage = std::stol(op.args_[1]);
+
+            if(id == decider->id_){
+                // Decrease health
+                frame_capturers_[decider->id_]->AddDeltaHealth(damage);
+                
+                // TODO Judge whether die
+                // decider_frame->health <= damage; 
+            }
+        }
+    }
 }

@@ -31,7 +31,7 @@ public:
 
     void Login();
 
-    void AddCapturer(uint64_t local_id, FrameCapturer* capturer);
+    void AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer);
     void RegisterCaptureredOnServer();
     void AddRender(uint64_t remote_id, FrameRender* render);
     std::function<void(uint64_t local_id, uint64_t remote_id)> OnUpdateCapturedLocalId;
@@ -39,6 +39,7 @@ public:
 private:
     uint64_t id_;
     CORE_MAP<uint64_t, FrameObject> frame_objects_;
+    CORE_MAP<uint64_t, std::shared_ptr<FrameCapturer>> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
     CORE_SET<uint64_t> captured_objects_id_;
     CORE_SET<uint64_t> uncaptured_objects_id_;
     Core::Client client_;
@@ -54,10 +55,12 @@ private:
     // Send to Server
     void SendPacket(uint64_t id, std::shared_ptr<PacketItf> packet);
 
+    //decider is always the captured, and other is always the uncaptured.
     void ReviseEffect(FrameObject* decider, FrameItf* decider_frame, FrameObject* other, FrameItf* other_frame);
     
-    // when local frame added.
-    // Therefore there is no need to Caculate effect again when a remote frame with a calulated frame idx in this side arrived, or it calculated twice.
+    // 1. When local frame added. 
+    // 2. When a remote frame received.
+    // The effects on captured object will become effective in the nearest frame;
     void EffectCaculate(uint64_t object_id);
 };
 }
