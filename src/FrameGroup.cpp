@@ -1,6 +1,6 @@
 #include "FrameGroup.h"
 
-#include <pframe/frame.pb.h>
+#include <AProto/pframe/frame.pb.h>
 
 using namespace aoles;
 

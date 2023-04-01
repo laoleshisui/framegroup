@@ -1,7 +1,7 @@
 #include "FrameEncoder.h"
 #include <thread>
 
-#include <pframe/frame_data.pb.h>
+#include <AProto/pframe/frame_data.pb.h>
 
 using namespace aoles;
 

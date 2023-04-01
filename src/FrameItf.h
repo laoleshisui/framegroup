@@ -2,7 +2,7 @@
 #define FRAMEITF_H
 
 #include <string>
-#include <pframe/frame_data.pb.h>
+#include <AProto/pframe/frame_data.pb.h>
 
 namespace aoles{
 
