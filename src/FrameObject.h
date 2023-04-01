@@ -9,7 +9,7 @@
 #include <string>
 #include <functional>
 
-#include <Type.h>
+#include <core/Type.h>
 
 #include "FrameItf.h"
 #include "FrameEncoder.h"

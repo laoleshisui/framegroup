@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "FrameItf.h"
-#include <Type.h>
+#include <core/Type.h>
 
 namespace aoles{
 
