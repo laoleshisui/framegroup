@@ -26,8 +26,6 @@ private:
     std::unique_ptr<taskqueue::TaskQueueFactory> task_queue_factory_;
     //for updating frame_
     std::unique_ptr<taskqueue::TaskQueueBase, taskqueue::TaskQueueDeleter> task_queue_frame_;
-    //for sinks_->OnFrame()
-    std::unique_ptr<taskqueue::TaskQueueBase, taskqueue::TaskQueueDeleter> task_queue_capturer_;
 };
 
 }
