@@ -82,11 +82,5 @@ public:
     std::vector<Operation> operations_;
     uint32_t health_;
 };
-
-class PacketItf
-{
-public:
-    std::string data_;
-};
 }
 #endif

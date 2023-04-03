@@ -2,7 +2,8 @@
 #define FRAMEDECODER_H
 
 #include <memory>
-#include "FrameSinkItf.h"
+#include <PacketItf.h>
+#include <FrameItf.h>
 
 namespace aoles{
 

@@ -30,11 +30,9 @@ set(SRC
 )
 set(API_INCLUDE
     src/FrameCapturer.h
-    src/FrameDecoder.h
-    src/FrameEncoder.h
     src/FrameGroup.h
     src/FrameItf.h
-    src/FrameObject.h
+    src/PacketItf.h
     src/FrameRender.h
     src/FrameSinkItf.h
     src/PacketSinkItf.h

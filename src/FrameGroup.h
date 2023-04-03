@@ -13,11 +13,14 @@
 #include <core/Type.h>
 #include <core/net/Client.h>
 
-#include "FrameObject.h"
 #include "FrameCapturer.h"
 #include "FrameRender.h"
+#include <PacketItf.h>
+
 
 namespace aoles{
+
+class FrameObject;
 
 /**
  * Multi clients support multicast by server;
@@ -38,7 +41,7 @@ public:
     std::function<void(uint64_t remote_id)> OnUpdateUncapturedRemoteId;
 private:
     uint64_t id_;
-    CORE_MAP<uint64_t, FrameObject> frame_objects_;
+    CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;
     CORE_MAP<uint64_t, std::shared_ptr<FrameCapturer>> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
     CORE_SET<uint64_t> captured_objects_id_;
     CORE_SET<uint64_t> uncaptured_objects_id_;

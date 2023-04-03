@@ -3,7 +3,8 @@
 
 #include <memory>
 #include <string>
-#include "FrameSinkItf.h"
+#include <PacketItf.h>
+#include <FrameItf.h>
 
 namespace aoles{
 

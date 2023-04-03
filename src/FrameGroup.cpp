@@ -1,5 +1,7 @@
 #include "FrameGroup.h"
 
+#include "FrameObject.h"
+
 #include <AProto/pframe/frame.pb.h>
 
 using namespace aoles;
@@ -31,8 +33,8 @@ void FrameGroup::Login(){
 void FrameGroup::AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer){
     //local id will be replaced by remote id soon.
     captured_objects_id_.insert(local_id);
-    frame_objects_.emplace(local_id, FrameObject());
-    capturer->AddSink(&(frame_objects_[local_id]));
+    frame_objects_.emplace(local_id, std::make_unique<FrameObject>());
+    capturer->AddSink(frame_objects_[local_id].get());
 
     frame_capturers_.emplace(local_id, capturer);
 }
@@ -53,15 +55,15 @@ void FrameGroup::RegisterCaptureredOnServer(){
 }
 
 void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
-    frame_objects_[remote_id].AddSink(render);
+    frame_objects_[remote_id]->AddSink(render);
 }
 
 void FrameGroup::InitFrameObjects(){
     //TODO fill frame_objects_ & captured_objects_id_ & uncaptured_objects_id_
     //Maybe from server data
-    for(CORE_MAP<uint64_t, FrameObject>::value_type& i : frame_objects_){
-        i.second.id_ = i.first;
-        i.second.SendPacket = std::bind(&FrameGroup::SendPacket, this, i.first, std::placeholders::_1);
+    for(CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::value_type& i : frame_objects_){
+        i.second->id_ = i.first;
+        i.second->SendPacket = std::bind(&FrameGroup::SendPacket, this, i.first, std::placeholders::_1);
     }
 }
 
@@ -100,11 +102,11 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
         frame.ParseFromArray(data, *len);
 
         uint64_t object_id = frame.id();
-        CORE_MAP<uint64_t, FrameObject>::iterator it = frame_objects_.find(object_id);
+        CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::iterator it = frame_objects_.find(object_id);
         if (it != frame_objects_.end()){
             std::shared_ptr<PacketItf> packet = std::make_shared<PacketItf>();
             packet->data_ = std::move(frame.data());
-            it->second.OnPacket(packet);
+            it->second->OnPacket(packet);
         }
         EffectCaculate(object_id);
     }
@@ -129,7 +131,7 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
                 uint64_t remote_id = registered_objects.ids(i++);
                 {
                     //update frame_objects_' key
-                    CORE_MAP<uint64_t, FrameObject>::node_type pair = frame_objects_.extract(local_id);
+                    CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::node_type pair = frame_objects_.extract(local_id);
                     pair.key() = remote_id;
                     frame_objects_.insert(std::move(pair));
                 }
@@ -154,7 +156,7 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
 
             for(const uint64_t& uncaptured_id : registered_objects.ids()){
                 uncaptured_objects_id_.insert(uncaptured_id);
-                frame_objects_.emplace(uncaptured_id, FrameObject());
+                frame_objects_.emplace(uncaptured_id, std::make_unique<FrameObject>());
                 if(OnUpdateUncapturedRemoteId){
                     OnUpdateUncapturedRemoteId(uncaptured_id);
                 }
@@ -171,19 +173,19 @@ void FrameGroup::EffectCaculate(uint64_t object_id){
     if(captured_objects_id_.find(object_id) != captured_objects_id_.end()){
         // local frame added
         for(const CORE_SET<uint64_t>::value_type& id : uncaptured_objects_id_){
-            ReviseEffect(&(frame_objects_[object_id]), frame_objects_[object_id].local_frames_.end()->get(), &(frame_objects_[id]), frame_objects_[id].remote_frames_.end()->get());
+            ReviseEffect(frame_objects_[object_id].get(), frame_objects_[object_id]->local_frames_.end()->get(), frame_objects_[id].get(), frame_objects_[id]->remote_frames_.end()->get());
         }
     }else{
         // remote frame received
         // If the network is fine, there is no influence. The main situation is a bad network between CS 
         for(const CORE_SET<uint64_t>::value_type& id : captured_objects_id_){
-            for (std::vector<std::shared_ptr<FrameItf>>::reverse_iterator it = frame_objects_[id].local_frames_.rbegin();
-                it != frame_objects_[id].local_frames_.rend();
+            for (std::vector<std::shared_ptr<FrameItf>>::reverse_iterator it = frame_objects_[id]->local_frames_.rbegin();
+                it != frame_objects_[id]->local_frames_.rend();
                 it++){
-                if((*it)->idx_ == (*(frame_objects_[object_id].remote_frames_.end()))->idx_){
-                    ReviseEffect(&(frame_objects_[id]), it->get(), &(frame_objects_[object_id]), frame_objects_[object_id].remote_frames_.end()->get());
+                if((*it)->idx_ == (*(frame_objects_[object_id]->remote_frames_.end()))->idx_){
+                    ReviseEffect(frame_objects_[id].get(), it->get(), frame_objects_[object_id].get(), frame_objects_[object_id]->remote_frames_.end()->get());
                 }
-                else if((*it)->idx_ < (*(frame_objects_[object_id].remote_frames_.end()))->idx_){
+                else if((*it)->idx_ < (*(frame_objects_[object_id]->remote_frames_.end()))->idx_){
                     break;
                 }
                 

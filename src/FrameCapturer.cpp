@@ -16,7 +16,8 @@ void FrameCapturer::Capture(){
     task_queue_capturer_->PostDelayedTask(taskqueue::ToQueuedTask([this]{
         Capture();
         for (FrameSinkItf* sink : sinks_){
-            sink->OnFrame(frame_);
+            // copy frame_
+            sink->OnFrame(std::make_shared<FrameItf>(*(frame_.get())));
         }
     }), 1000 / fps_);
 }
