@@ -27,7 +27,7 @@ FrameGroup::~FrameGroup()
 void FrameGroup::Login(){
     pframe::Login login;
     login.set_proto_type(pframe::ProtoType::LOGIN);
-    client_.SendToServer(login.SerializeAsString());
+    client_.Send(client_.client_bev_, login.SerializeAsString());
 }
 void FrameGroup::EnterRoom(uint64_t room_id){
     assert(id_);
@@ -36,7 +36,7 @@ void FrameGroup::EnterRoom(uint64_t room_id){
     enter_room.set_group_id(id_);
     enter_room.set_room_id(room_id);
     
-    client_.SendToServer(enter_room.SerializeAsString());
+    client_.Send(client_.client_bev_, enter_room.SerializeAsString());
 }
 void FrameGroup::ExitRoom(uint64_t room_id){
     assert(id_);
@@ -45,7 +45,7 @@ void FrameGroup::ExitRoom(uint64_t room_id){
     exit_room.set_group_id(id_);
     exit_room.set_room_id(room_id);
     
-    client_.SendToServer(exit_room.SerializeAsString());
+    client_.Send(client_.client_bev_, exit_room.SerializeAsString());
 }
 
 void FrameGroup::AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer){
@@ -69,7 +69,7 @@ void FrameGroup::RegisterCaptureredOnServer(){
     register_objects.set_proto_type(pframe::ProtoType::REGISTER_OBJECTS);
     register_objects.set_num_of_objects(captured_objects_id_.size());
     
-    client_.SendToServer(register_objects.SerializeAsString());
+    client_.Send(client_.client_bev_, register_objects.SerializeAsString());
 }
 
 void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
@@ -98,16 +98,7 @@ void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packe
     frame.set_object_id(object_id);
     frame.set_data(std::move(packet->data_));
 
-    uint16_t proto_size = frame.ByteSizeLong();
-    if(proto_size <= MAX_SEND_BUF_LEN){
-        //no extra copy
-        memcpy(client_.send_buf_.HeadPtr(), &proto_size, PACKET_HEAD_SIZE);
-        frame.SerializeToArray(client_.send_buf_.DataPtr(), proto_size);
-        client_.SendToServer(client_.send_buf_.HeadPtr() , proto_size + PACKET_HEAD_SIZE);
-    }
-    else{
-        client_.SendToServer(frame.SerializeAsString());
-    }
+    client_.Send(client_.client_bev_, frame.SerializeAsString());
     EffectCaculate(object_id);
 }
 
