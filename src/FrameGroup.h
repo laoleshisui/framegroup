@@ -33,6 +33,8 @@ public:
     ~FrameGroup();
 
     void Login();
+    void EnterRoom(uint64_t room_id = 0);
+    void ExitRoom(uint64_t room_id = 0);
 
     void AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer);
     void RegisterCaptureredOnServer();
@@ -56,7 +58,7 @@ private:
     void EventCB(Core::Server::Client* client, const Core::NET_EVENT event);
 
     // Send to Server
-    void SendPacket(uint64_t id, std::shared_ptr<PacketItf> packet);
+    void SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packet);
 
     //decider is always the captured, and other is always the uncaptured.
     void ReviseEffect(FrameObject* decider, FrameItf* decider_frame, FrameObject* other, FrameItf* other_frame);

@@ -29,6 +29,24 @@ void FrameGroup::Login(){
     login.set_proto_type(pframe::ProtoType::LOGIN);
     client_.SendToServer(login.SerializeAsString());
 }
+void FrameGroup::EnterRoom(uint64_t room_id){
+    assert(id_);
+    pframe::EnterRoom enter_room;
+    enter_room.set_proto_type(pframe::ProtoType::ENTER_ROOM);
+    enter_room.set_group_id(id_);
+    enter_room.set_room_id(room_id);
+    
+    client_.SendToServer(enter_room.SerializeAsString());
+}
+void FrameGroup::ExitRoom(uint64_t room_id){
+    assert(id_);
+    pframe::ExitRoom exit_room;
+    exit_room.set_proto_type(pframe::ProtoType::EXIT_ROOM);
+    exit_room.set_group_id(id_);
+    exit_room.set_room_id(room_id);
+    
+    client_.SendToServer(exit_room.SerializeAsString());
+}
 
 void FrameGroup::AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer){
     //local id will be replaced by remote id soon.
@@ -40,6 +58,8 @@ void FrameGroup::AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> c
 }
 
 void FrameGroup::RegisterCaptureredOnServer(){
+    assert(id_);
+
     if(!id_){
         return;
     }
@@ -47,9 +67,7 @@ void FrameGroup::RegisterCaptureredOnServer(){
     pframe::RegisterObjects register_objects;
     register_objects.set_group_id(id_);
     register_objects.set_proto_type(pframe::ProtoType::REGISTER_OBJECTS);
-    for (const uint64_t& local_id : captured_objects_id_){
-        register_objects.add_ids(local_id);
-    }
+    register_objects.set_num_of_objects(captured_objects_id_.size());
     
     client_.SendToServer(register_objects.SerializeAsString());
 }
@@ -67,14 +85,17 @@ void FrameGroup::InitFrameObjects(){
     }
 }
 
-void FrameGroup::SendPacket(uint64_t id, std::shared_ptr<PacketItf> packet){
+void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packet){
+    assert(id_);
+
     if(packet->data_.empty()){
         return;
     }
 
     pframe::Frame frame;
     frame.set_proto_type(pframe::ProtoType::FRAME);
-    frame.set_id(id);
+    frame.set_group_id(id_);
+    frame.set_object_id(object_id);
     frame.set_data(std::move(packet->data_));
 
     uint16_t proto_size = frame.ByteSizeLong();
@@ -87,7 +108,7 @@ void FrameGroup::SendPacket(uint64_t id, std::shared_ptr<PacketItf> packet){
     else{
         client_.SendToServer(frame.SerializeAsString());
     }
-    EffectCaculate(id);
+    EffectCaculate(object_id);
 }
 
 void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
@@ -101,7 +122,10 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
         pframe::Frame frame;
         frame.ParseFromArray(data, *len);
 
-        uint64_t object_id = frame.id();
+        // Only receive other groups' frame
+        assert(frame.group_id() != id_);
+
+        uint64_t object_id = frame.object_id();
         CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::iterator it = frame_objects_.find(object_id);
         if (it != frame_objects_.end()){
             std::shared_ptr<PacketItf> packet = std::make_shared<PacketItf>();
@@ -120,13 +144,14 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
         else if(event.code() == pframe::EventCode::LOGIN_FAILED){
             id_ = 0;
         }
-        else if(event.code() == pframe::EventCode::REGISTERED_OBJECT){
+        else if(event.code() == pframe::EventCode::REGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
             registered_objects.ParseFromString(std::move(event.data()));
             
             CORE_SET<uint64_t> registered_objects_id;
             int i = 0;
-            //Assert captured_objects_id_.size() = registered_objects.size()
+            //Assert captured_objects_id_.size() == registered_objects.size()
+            assert(captured_objects_id_.size() == registered_objects.ids_size());
             for (const uint64_t& local_id : captured_objects_id_){
                 uint64_t remote_id = registered_objects.ids(i++);
                 {
@@ -205,8 +230,7 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
             return;
         }
     }else{
-        CORE_SET<uint64_t> set = {other->id_};
-        decider->effected_map_.emplace(decider_frame->idx_, std::move(set));
+        decider->effected_map_[decider_frame->idx_] = {other->id_};
     }
 
     //effect now!
