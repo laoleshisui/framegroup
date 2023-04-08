@@ -54,8 +54,8 @@ private:
     // Maybe a signal from server to start.
     void InitFrameObjects();
 
-    void RecvCB(Core::Server::Client* client, const char* msg);
-    void EventCB(Core::Server::Client* client, const Core::NET_EVENT event);
+    void RecvCB(Core::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len);
+    void EventCB(Core::Server::Client* client, const short event);
 
     // Send to Server
     void SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packet);

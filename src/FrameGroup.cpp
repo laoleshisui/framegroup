@@ -10,7 +10,7 @@ FrameGroup::FrameGroup()
 :id_(0)
 {
     Core::SocketAddress addr("192.168.0.105", 10001);
-    Core::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2);
+    Core::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     client_.RegisterReadCallBack(std::make_shared<Core::Server::MSG_FUNC>(recv_cb));
     Core::Server::EVENT_FUNC event_cb = std::bind(&FrameGroup::EventCB, this, std::placeholders::_1, std::placeholders::_2);
     client_.RegisterEventCallBack(std::make_shared<Core::Server::EVENT_FUNC>(event_cb));
@@ -102,7 +102,9 @@ void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packe
     EffectCaculate(object_id);
 }
 
-void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
+void FrameGroup::RecvCB(Core::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len){
+
+    const char* msg = (const char*)evbuffer_pullup(evb, packet_len);
     const char* data = msg + PACKET_HEAD_SIZE;
     uint16_t* len = (uint16_t*)msg;
 
@@ -180,7 +182,7 @@ void FrameGroup::RecvCB(Core::Server::Client* client, const char* msg){
         }
     }
 }
-void FrameGroup::EventCB(Core::Server::Client* client, const Core::NET_EVENT event){
+void FrameGroup::EventCB(Core::Server::Client* client, const short event){
 
 }
 
