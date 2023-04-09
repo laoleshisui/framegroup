@@ -51,15 +51,15 @@ private:
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
     CORE_SET<uint64_t> captured_objects_id_;
     CORE_SET<uint64_t> uncaptured_objects_id_;
-    Core::Client client_;
+    acore::Client client_;
     std::thread client_loop_;
 
     // All data is received, will start soon;
     // Maybe a signal from server to start.
     void InitFrameObjects();
 
-    void RecvCB(Core::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len);
-    void EventCB(Core::Server::Client* client, const short event);
+    void RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len);
+    void EventCB(acore::Server::Client* client, const short event);
 
     // Send to Server
     void SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packet);

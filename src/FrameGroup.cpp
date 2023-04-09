@@ -10,10 +10,10 @@ FrameGroup::FrameGroup()
 :id_(0)
 {
     
-    Core::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-    client_.RegisterReadCallBack(std::make_shared<Core::Server::MSG_FUNC>(recv_cb));
-    Core::Server::EVENT_FUNC event_cb = std::bind(&FrameGroup::EventCB, this, std::placeholders::_1, std::placeholders::_2);
-    client_.RegisterEventCallBack(std::make_shared<Core::Server::EVENT_FUNC>(event_cb));
+    acore::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    client_.RegisterReadCallBack(std::make_shared<acore::Server::MSG_FUNC>(recv_cb));
+    acore::Server::EVENT_FUNC event_cb = std::bind(&FrameGroup::EventCB, this, std::placeholders::_1, std::placeholders::_2);
+    client_.RegisterEventCallBack(std::make_shared<acore::Server::EVENT_FUNC>(event_cb));
 }
 
 FrameGroup::~FrameGroup()
@@ -21,9 +21,9 @@ FrameGroup::~FrameGroup()
 }
 
 void FrameGroup::Connect(std::string ip, int port){
-    Core::SocketAddress addr(std::move(ip), port);
+    acore::SocketAddress addr(std::move(ip), port);
     client_.Connect(addr);
-    client_loop_ = std::thread(&Core::Client::Loop, &client_);
+    client_loop_ = std::thread(&acore::Client::Loop, &client_);
     client_loop_.detach();
 }
 
@@ -105,7 +105,7 @@ void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packe
     EffectCaculate(object_id);
 }
 
-void FrameGroup::RecvCB(Core::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len){
+void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len){
 
     const char* msg = (const char*)evbuffer_pullup(evb, packet_len);
     const char* data = msg + PACKET_HEAD_SIZE;
@@ -185,7 +185,7 @@ void FrameGroup::RecvCB(Core::Server::Client* client, struct evbuffer* evb, u_in
         }
     }
 }
-void FrameGroup::EventCB(Core::Server::Client* client, const short event){
+void FrameGroup::EventCB(acore::Server::Client* client, const short event){
 
 }
 

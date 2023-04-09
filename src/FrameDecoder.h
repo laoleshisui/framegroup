@@ -18,7 +18,7 @@ public:
     
     std::shared_ptr<FrameItf> Decode(std::shared_ptr<PacketItf> packet);
 private:
-    Core::Recycler<FrameItf> available_frames_;
+    acore::Recycler<FrameItf> available_frames_;
 };
 
 }

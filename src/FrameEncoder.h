@@ -19,7 +19,7 @@ public:
     
     std::shared_ptr<PacketItf> Encode(std::shared_ptr<FrameItf> frame);
 private:
-    Core::Recycler<PacketItf> available_packets_;
+    acore::Recycler<PacketItf> available_packets_;
 };
 
 }
