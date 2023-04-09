@@ -8,7 +8,7 @@
 #include <PacketItf.h>
 #include <FrameItf.h>
 
-namespace aoles{
+namespace framegroup{
 
 // Encode Frame to Packet
 class FrameEncoder

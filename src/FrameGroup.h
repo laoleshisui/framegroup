@@ -18,7 +18,7 @@
 #include <PacketItf.h>
 
 
-namespace aoles{
+namespace framegroup{
 
 class FrameObject;
 

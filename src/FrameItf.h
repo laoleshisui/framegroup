@@ -5,7 +5,7 @@
 #include <cmath>
 #include <AProto/pframe/frame_data.pb.h>
 
-namespace aoles{
+namespace framegroup{
 
 using pframe::FrameType;
 using pframe::OperationType;

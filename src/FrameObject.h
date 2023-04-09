@@ -19,7 +19,7 @@
 #include "FrameSinkItf.h"
 
 
-namespace aoles{
+namespace framegroup{
 
 class FrameObject : public FrameSinkItf, 
     public PacketSinkItf,

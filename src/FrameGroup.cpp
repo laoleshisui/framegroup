@@ -4,7 +4,7 @@
 
 #include <AProto/pframe/frame.pb.h>
 
-using namespace aoles;
+using namespace framegroup;
 
 FrameGroup::FrameGroup()
 :id_(0)

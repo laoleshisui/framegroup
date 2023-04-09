@@ -6,7 +6,7 @@
 #include "FrameSinkItf.h"
 
 #include <libtaskqueue/task_queue_stdlib.h>
-namespace aoles{
+namespace framegroup{
 
 // Capture Frame of one object from ui
 // Collect operations in every Frame

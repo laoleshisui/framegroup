@@ -7,7 +7,7 @@
 #include <PacketItf.h>
 #include <FrameItf.h>
 
-namespace aoles{
+namespace framegroup{
 
 // Decode Packet to Frame.
 class FrameDecoder

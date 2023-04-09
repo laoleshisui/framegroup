@@ -5,7 +5,7 @@ namespace{
     uint32_t delay_ms;
 }
 
-using namespace aoles;
+using namespace framegroup;
 
 FrameCapturer::FrameCapturer()
 :fps_(30),

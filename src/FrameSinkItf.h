@@ -6,7 +6,7 @@
 #include "FrameItf.h"
 #include <core/Type.h>
 
-namespace aoles{
+namespace framegroup{
 
 class FrameSinkItf
 {

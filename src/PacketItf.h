@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace aoles{
+namespace framegroup{
 class PacketItf
 {
 public:

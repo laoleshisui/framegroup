@@ -4,7 +4,7 @@
 #include <memory>
 #include "FrameSinkItf.h"
 
-namespace aoles{
+namespace framegroup{
 
 // Render Frame to ui 
 // Run operations in every Frame

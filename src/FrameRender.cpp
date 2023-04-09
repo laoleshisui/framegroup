@@ -1,6 +1,6 @@
 #include "FrameRender.h"
 
-using namespace aoles;
+using namespace framegroup;
 
 FrameRender::FrameRender()
 :OnMoveTo(0),

@@ -4,7 +4,7 @@
 #include <memory>
 #include "FrameItf.h"
 
-namespace aoles{
+namespace framegroup{
 
 class PacketSinkItf
 {

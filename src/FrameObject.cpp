@@ -1,6 +1,6 @@
 #include "FrameObject.h"
 
-using namespace aoles;
+using namespace framegroup;
 
 FrameObject::FrameObject()
 :id_(0)
