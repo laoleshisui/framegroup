@@ -43,21 +43,29 @@ add_library(
     ${SRC}
 )
 
+add_library(
+    ${PROJECT_NAME}_shared SHARED
+    ${SRC}
+)
+
 
 #deps
 #core
 find_package(core REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} core::core)
+target_link_libraries(${PROJECT_NAME}_shared core::core)
 list(APPEND target_dependencies "core")
 
 #AProto
 find_package(AProto REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} AProto::AProto)
+target_link_libraries(${PROJECT_NAME}_shared AProto::AProto)
 list(APPEND target_dependencies "AProto")
 
 #libtaskqueue
 find_package(libtaskqueue REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} libtaskqueue::libtaskqueue)
+target_link_libraries(${PROJECT_NAME}_shared libtaskqueue::libtaskqueue)
 list(APPEND target_dependencies "libtaskqueue")
 
 ##-----------######  GenerateCmakePackage  ######-----------
@@ -70,7 +78,7 @@ target_include_directories(${PROJECT_NAME}
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 # fill include and lib
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_shared
 EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -85,11 +93,6 @@ install(EXPORT ${PROJECT_NAME}Targets
   FILE ${PROJECT_NAME}Targets.cmake
   NAMESPACE ${PROJECT_NAME}::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
-# Create imported target ${PROJECT_NAME}::${PROJECT_NAME}
-add_library(${PROJECT_NAME}::${PROJECT_NAME} STATIC IMPORTED)
-set_target_properties(${PROJECT_NAME}::${PROJECT_NAME} PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
 include(CMakePackageConfigHelpers)
 # generate xxxConfigVersion.cmake

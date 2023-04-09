@@ -20,6 +20,7 @@ public:
     
     void AddOperation(Operation op);
     void AddDeltaHealth(int32_t delta);
+    void MoveTo(Position pos);
 private:
     uint32_t fps_;
     std::shared_ptr<FrameItf> frame_;

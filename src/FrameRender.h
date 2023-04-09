@@ -14,7 +14,12 @@ public:
     FrameRender();
     ~FrameRender();
     
-    virtual void Render(std::shared_ptr<FrameItf> frame) = 0;
+    virtual void Render(std::shared_ptr<FrameItf> frame);
+    virtual void OnFrame(std::shared_ptr<FrameItf> frame) override;
+
+    void (*OnMoveTo)(Position postion);
+    void (*OnOperate)(Operation operation);
+    void (*OnHealth)(uint32_t health);
 private:
 };
 
