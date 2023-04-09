@@ -10,7 +10,7 @@
 #include <functional>
 #include <mutex>
 
-#include <core/Type.h>
+#include <acore/Type.h>
 
 #include "FrameItf.h"
 #include "FrameEncoder.h"

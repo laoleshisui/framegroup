@@ -57,10 +57,10 @@ add_library(
 
 #deps
 #core
-find_package(core REQUIRED CONFIG)
-target_link_libraries(${PROJECT_NAME} core::core)
-target_link_libraries(${PROJECT_NAME}_shared core::core)
-list(APPEND target_dependencies "core")
+find_package(acore REQUIRED CONFIG)
+target_link_libraries(${PROJECT_NAME} acore::acore)
+target_link_libraries(${PROJECT_NAME}_shared acore::acore)
+list(APPEND target_dependencies "acore")
 
 #AProto
 find_package(AProto REQUIRED CONFIG)

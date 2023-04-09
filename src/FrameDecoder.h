@@ -1,7 +1,7 @@
 #ifndef FRAMEDECODER_H
 #define FRAMEDECODER_H
 
-#include <core/utils/Recycler.h>
+#include <acore/utils/Recycler.h>
 
 #include <memory>
 #include <PacketItf.h>

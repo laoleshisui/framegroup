@@ -10,8 +10,8 @@
 #include <memory>
 #include <thread>
 
-#include <core/Type.h>
-#include <core/net/Client.h>
+#include <acore/Type.h>
+#include <acore/net/Client.h>
 
 #include "FrameCapturer.h"
 #include "FrameRender.h"

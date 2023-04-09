@@ -1,7 +1,7 @@
 #ifndef FRAMEENCODER_H
 #define FRAMEENCODER_H
 
-#include <core/utils/Recycler.h>
+#include <acore/utils/Recycler.h>
 
 #include <memory>
 #include <string>

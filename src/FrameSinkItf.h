@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "FrameItf.h"
-#include <core/Type.h>
+#include <acore/Type.h>
 
 namespace framegroup{
 
