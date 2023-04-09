@@ -9,19 +9,22 @@ using namespace aoles;
 FrameGroup::FrameGroup()
 :id_(0)
 {
-    Core::SocketAddress addr("192.168.0.105", 10001);
+    
     Core::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     client_.RegisterReadCallBack(std::make_shared<Core::Server::MSG_FUNC>(recv_cb));
     Core::Server::EVENT_FUNC event_cb = std::bind(&FrameGroup::EventCB, this, std::placeholders::_1, std::placeholders::_2);
     client_.RegisterEventCallBack(std::make_shared<Core::Server::EVENT_FUNC>(event_cb));
-    client_.Connect(addr);
-    
-    client_loop_ = std::thread(&Core::Client::Loop, &client_);
-    client_loop_.detach();
 }
 
 FrameGroup::~FrameGroup()
 {
+}
+
+void FrameGroup::Connect(std::string ip, int port){
+    Core::SocketAddress addr(std::move(ip), port);
+    client_.Connect(addr);
+    client_loop_ = std::thread(&Core::Client::Loop, &client_);
+    client_loop_.detach();
 }
 
 void FrameGroup::Login(){
@@ -48,7 +51,7 @@ void FrameGroup::ExitRoom(uint64_t room_id){
     client_.Send(client_.client_bev_, exit_room.SerializeAsString());
 }
 
-void FrameGroup::AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer){
+void FrameGroup::AddCapturer(uint64_t local_id, FrameCapturer* capturer){
     //local id will be replaced by remote id soon.
     captured_objects_id_.insert(local_id);
     frame_objects_.emplace(local_id, std::make_unique<FrameObject>());
@@ -156,7 +159,7 @@ void FrameGroup::RecvCB(Core::Server::Client* client, struct evbuffer* evb, u_in
 
                 {
                     //update frame_capturers_' key
-                    CORE_MAP<uint64_t, std::shared_ptr<FrameCapturer>>::node_type pair = frame_capturers_.extract(local_id);
+                    CORE_MAP<uint64_t, FrameCapturer*>::node_type pair = frame_capturers_.extract(local_id);
                     pair.key() = remote_id;
                     frame_capturers_.insert(std::move(pair));
                 }

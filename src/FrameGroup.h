@@ -29,22 +29,26 @@ class FrameObject;
 class FrameGroup
 {
 public:
+    typedef void(OnUpdateCapturedLocalId_FUNC)(uint64_t local_id, uint64_t remote_id);
+    typedef void(OnUpdateUncapturedRemoteId_FUNC)(uint64_t remote_id);
+
     FrameGroup();
     ~FrameGroup();
 
+    void Connect(std::string ip, int port);
     void Login();
     void EnterRoom(uint64_t room_id = 0);
     void ExitRoom(uint64_t room_id = 0);
 
-    void AddCapturer(uint64_t local_id, std::shared_ptr<FrameCapturer> capturer);
+    void AddCapturer(uint64_t local_id, FrameCapturer* capturer);
     void RegisterCaptureredOnServer();
     void AddRender(uint64_t remote_id, FrameRender* render);
-    std::function<void(uint64_t local_id, uint64_t remote_id)> OnUpdateCapturedLocalId;
-    std::function<void(uint64_t remote_id)> OnUpdateUncapturedRemoteId;
+    std::function<OnUpdateCapturedLocalId_FUNC> OnUpdateCapturedLocalId;
+    std::function<OnUpdateUncapturedRemoteId_FUNC> OnUpdateUncapturedRemoteId;
 private:
     uint64_t id_;
     CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;
-    CORE_MAP<uint64_t, std::shared_ptr<FrameCapturer>> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
+    CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
     CORE_SET<uint64_t> captured_objects_id_;
     CORE_SET<uint64_t> uncaptured_objects_id_;
     Core::Client client_;

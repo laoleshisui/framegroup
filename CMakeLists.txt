@@ -12,6 +12,9 @@ include_directories(
 )
 
 set(SRC
+    itf/FrameGroupApi.h
+    itf/FrameGroupApi.cpp
+
     src/FrameCapturer.h
     src/FrameCapturer.cpp
     src/FrameDecoder.h
@@ -36,6 +39,9 @@ set(API_INCLUDE
     src/FrameRender.h
     src/FrameSinkItf.h
     src/PacketSinkItf.h
+)
+set(API_INCLUDE_ITF
+    itf/FrameGroupApi.h
 )
 
 add_library(
@@ -88,6 +94,8 @@ EXPORT ${PROJECT_NAME}Targets
 # fill include
 install(FILES ${API_INCLUDE}
 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/)
+install(FILES ${API_INCLUDE_ITF}
+DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/itf)
 # generate Targets.cmake
 install(EXPORT ${PROJECT_NAME}Targets
   FILE ${PROJECT_NAME}Targets.cmake
