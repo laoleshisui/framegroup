@@ -5,7 +5,7 @@
 #include "FrameItf.h"
 #include "FrameSinkItf.h"
 
-#include <libtaskqueue/task_queue_stdlib.h>
+#include <taskqueue/task_queue_stdlib.h>
 namespace framegroup{
 
 // Capture Frame of one object from ui
@@ -23,6 +23,8 @@ public:
     void MoveTo(Position pos);
 private:
     uint32_t fps_;
+    uint32_t delay_ms_;
+
     std::shared_ptr<FrameItf> frame_;
     std::unique_ptr<taskqueue::TaskQueueFactory> task_queue_factory_;
     //for updating frame_

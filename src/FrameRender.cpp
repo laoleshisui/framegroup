@@ -11,11 +11,16 @@ FrameRender::~FrameRender(){}
 
 void FrameRender::Render(std::shared_ptr<FrameItf> frame){
     if(OnMoveTo){
-        OnMoveTo(frame->position_);
+        OnMoveTo(frame->position_.x_, frame->position_.y_);
     }
     if(OnOperate){
         for(Operation& opration : frame->operations_){
-            OnOperate(opration);
+            const char** args = (const char**)malloc(opration.args_.size());
+            for(int i = 0; i < opration.args_.size(); ++i){
+                args[i] = opration.args_[i].c_str();
+            }
+            OnOperate(opration.type_, args, opration.args_.size());
+            free(args);
         }
     }
     if(OnHealth){

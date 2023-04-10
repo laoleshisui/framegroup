@@ -20,7 +20,17 @@ extern void FrameGroup_RegisterCaptureredOnServer(void* group);
 extern void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render);
 extern void FrameGroup_SetCallBack_OnUpdateCapturedLocalId(void* group, void(*cb)(uint64_t local_id, uint64_t remote_id));
 extern void FrameGroup_SetCallBack_OnUpdateUncapturedRemoteId(void* group, void(*cb)(uint64_t remote_id));
-    
+
+extern void* CreateFrameCapturer();
+extern void FrameCapturer_Capture(void* capturer);
+extern void FrameCapturer_AddOperation(void* capturer, uint32_t type, const char** args, uint32_t rows);
+extern void FrameCapturer_AddDeltaHealth(void* capturer, int32_t delta);
+extern void FrameCapturer_MoveTo(void* capturer, float x, float y);
+
+extern void* CreateFrameRender();
+extern void FrameRender_SetCallBack_OnMoveTo(void* render, void (*cb)(float x, float y));
+extern void FrameRender_SetCallBack_OnOperate(void* render, void (*cb)(uint32_t type, char** args, uint32_t rows));
+extern void FrameRender_SetCallBack_OnHealth(void* render, void (*cb)(uint32_t health));
 }
 
 #endif

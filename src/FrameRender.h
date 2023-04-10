@@ -17,8 +17,8 @@ public:
     virtual void Render(std::shared_ptr<FrameItf> frame);
     virtual void OnFrame(std::shared_ptr<FrameItf> frame) override;
 
-    void (*OnMoveTo)(Position postion);
-    void (*OnOperate)(Operation operation);
+    void (*OnMoveTo)(float x, float y);
+    void (*OnOperate)(uint32_t type, const char** args, uint32_t rows);
     void (*OnHealth)(uint32_t health);
 private:
 };

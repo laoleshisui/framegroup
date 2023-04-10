@@ -1,19 +1,15 @@
 #include "FrameCapturer.h"
-#include <libtaskqueue/to_queued_task.h>
-
-namespace{
-    uint32_t delay_ms;
-}
+#include <taskqueue/to_queued_task.h>
 
 using namespace framegroup;
 
 FrameCapturer::FrameCapturer()
 :fps_(30),
+delay_ms_(1000/fps_),
 frame_(std::make_shared<FrameItf>()),
 task_queue_factory_(taskqueue::CreateTaskQueueStdlibFactory()),
 task_queue_frame_(task_queue_factory_->CreateTaskQueue("capture_frame", taskqueue::TaskQueueFactory::Priority::NORMAL))
 {
-    delay_ms = 1000 / fps_;
 }
 FrameCapturer::~FrameCapturer(){}
 
@@ -25,7 +21,7 @@ void FrameCapturer::Capture(){
             sink->OnFrame(std::make_shared<FrameItf>(*(frame_.get())));
             frame_->operations_.clear();
         }
-    }), delay_ms);
+    }), delay_ms_);
 }
 
 void FrameCapturer::AddOperation(Operation op){

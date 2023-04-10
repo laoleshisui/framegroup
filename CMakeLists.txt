@@ -56,23 +56,23 @@ add_library(
 
 
 #deps
-#core
+#acore
 find_package(acore REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} acore::acore)
 target_link_libraries(${PROJECT_NAME}_shared acore::acore)
 list(APPEND target_dependencies "acore")
 
-#AProto
-find_package(AProto REQUIRED CONFIG)
-target_link_libraries(${PROJECT_NAME} AProto::AProto)
-target_link_libraries(${PROJECT_NAME}_shared AProto::AProto)
-list(APPEND target_dependencies "AProto")
+#aproto
+find_package(aproto REQUIRED CONFIG)
+target_link_libraries(${PROJECT_NAME} aproto::aproto)
+target_link_libraries(${PROJECT_NAME}_shared aproto::aproto)
+list(APPEND target_dependencies "aproto")
 
-#libtaskqueue
-find_package(libtaskqueue REQUIRED CONFIG)
-target_link_libraries(${PROJECT_NAME} libtaskqueue::libtaskqueue)
-target_link_libraries(${PROJECT_NAME}_shared libtaskqueue::libtaskqueue)
-list(APPEND target_dependencies "libtaskqueue")
+#taskqueue
+find_package(taskqueue REQUIRED CONFIG)
+target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
+target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
+list(APPEND target_dependencies "taskqueue")
 
 ##-----------######  GenerateCmakePackage  ######-----------
 SET(CMAKE_INSTALL_LIBDIR lib)
