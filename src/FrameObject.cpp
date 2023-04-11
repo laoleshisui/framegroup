@@ -9,12 +9,8 @@ FrameObject::FrameObject()
 FrameObject::~FrameObject(){}
 
 void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
-    // send to render
-    /***
-     * TODO: Maybe add render to captuer's sinks_ to render realtime.
-     * And local render's fps  can be set flexibly.
-    */
-    SendFrame(frame);
+    // Not necessary to send local frame to render. it's from rendered.
+    // SendFrame(frame);
 
     std::shared_ptr<PacketItf> packet = encoder_->Encode(frame);
     local_frames_.emplace_back(frame);

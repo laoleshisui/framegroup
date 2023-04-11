@@ -9,9 +9,13 @@ export PREFIX_PATH=${Libevent_ROOT}/libevent:${PROTO_ROOT}/protobuf:${PROTO_ROOT
 export CMAKE_PREFIX_PATH=${PREFIX_PATH}
 
 #  -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
+if [ ! -d build ]; then
+mkdir build
+fi
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=build_lib \
  ..
 
 make
 make install
+cd ../

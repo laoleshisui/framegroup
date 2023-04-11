@@ -74,6 +74,19 @@ target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
 target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
 list(APPEND target_dependencies "taskqueue")
 
+# use swig to generate other language itf
+find_package(SWIG REQUIRED)
+include(${SWIG_USE_FILE})
+set(CMAKE_SWIG_FLAGS "")
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i 
+  PROPERTIES INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/itf)
+swig_add_library(${PROJECT_NAME}_api
+  TYPE SHARED 
+  LANGUAGE csharp
+  OUTPUT_DIR ${CMAKE_SOURCE_DIR}/itf/csharp/ 
+  SOURCES ${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i)
+target_link_libraries(${PROJECT_NAME}_api ${PROJECT_NAME})
+
 ##-----------######  GenerateCmakePackage  ######-----------
 SET(CMAKE_INSTALL_LIBDIR lib)
 SET(CMAKE_INSTALL_BINDIR bin)
@@ -84,7 +97,7 @@ target_include_directories(${PROJECT_NAME}
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 # fill include and lib
-install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_shared
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_shared ${PROJECT_NAME}_api
 EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
