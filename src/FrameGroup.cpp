@@ -2,7 +2,7 @@
 
 #include "FrameObject.h"
 
-#include <AProto/pframe/frame.pb.h>
+#include <aproto/pframe/frame.pb.h>
 
 using namespace framegroup;
 

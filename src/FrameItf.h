@@ -3,7 +3,7 @@
 
 #include <string>
 #include <cmath>
-#include <AProto/pframe/frame_data.pb.h>
+#include <aproto/pframe/frame_data.pb.h>
 
 namespace framegroup{
 
