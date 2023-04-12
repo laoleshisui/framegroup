@@ -37,11 +37,11 @@ void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     frame_group->AddRender(remote_id, frame_render);
 }
-void FrameGroup_SetCallBack_OnUpdateCapturedLocalId(void* group, void(*cb)(uint64_t local_id, uint64_t remote_id)){
+void FrameGroup_SetCallBack_OnUpdateCapturedLocalId(void* group, FrameGroup_OnUpdateCapturedLocalId cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->OnUpdateCapturedLocalId = std::move(cb);
 }
-void FrameGroup_SetCallBack_OnUpdateUncapturedRemoteId(void* group, void(*cb)(uint64_t remote_id)){
+void FrameGroup_SetCallBack_OnUpdateUncapturedRemoteId(void* group, FrameGroup_OnUpdateUncapturedRemoteId cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->OnUpdateUncapturedRemoteId = std::move(cb);
 }
@@ -77,15 +77,16 @@ void FrameCapturer_MoveTo(void* capturer, float x, float y){
 void* CreateFrameRender(){
     return new framegroup::FrameRender();
 }
-void FrameRender_SetCallBack_OnMoveTo(void* render, void (*cb)(float x, float y)){
+
+void FrameRender_SetCallBack_OnMoveTo(void* render, FrameRender_OnMoveTo cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     frame_render->OnMoveTo = cb;
 }
-void FrameRender_SetCallBack_OnOperate(void* render, void (*cb)(uint32_t type, const char** args, uint32_t rows)){
+void FrameRender_SetCallBack_OnOperate(void* render, FrameRender_OnOperate cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     frame_render->OnOperate = cb;
 }
-void FrameRender_SetCallBack_OnHealth(void* render, void (*cb)(uint32_t health)){
+void FrameRender_SetCallBack_OnHealth(void* render, FrameRender_OnHealth cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     frame_render->OnHealth = cb;
 }

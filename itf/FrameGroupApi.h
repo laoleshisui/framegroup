@@ -11,6 +11,13 @@
 extern "C"{
 #endif
 
+typedef void(*FrameGroup_OnUpdateCapturedLocalId)(uint64_t local_id, uint64_t remote_id);
+typedef void(*FrameGroup_OnUpdateUncapturedRemoteId)(uint64_t remote_id);
+typedef void(*FrameRender_OnMoveTo)(float x, float y);
+typedef void(*FrameRender_OnOperate)(uint32_t type, const char** args, uint32_t rows);
+typedef void(*FrameRender_OnHealth)(uint32_t health);
+
+
 extern void* CreateFrameGroup();
 extern void FrameGroup_Connect(void* group, char* ip, int port);
 extern void FrameGroup_Login(void* group);
@@ -19,8 +26,8 @@ extern void FrameGroup_ExitRoom(void* group, uint64_t room_id);
 extern void FrameGroup_AddCapturer(void* group, uint64_t local_id, void* capturer);
 extern void FrameGroup_RegisterCaptureredOnServer(void* group);
 extern void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render);
-extern void FrameGroup_SetCallBack_OnUpdateCapturedLocalId(void* group, void(*cb)(uint64_t local_id, uint64_t remote_id));
-extern void FrameGroup_SetCallBack_OnUpdateUncapturedRemoteId(void* group, void(*cb)(uint64_t remote_id));
+extern void FrameGroup_SetCallBack_OnUpdateCapturedLocalId(void* group, FrameGroup_OnUpdateCapturedLocalId cb);
+extern void FrameGroup_SetCallBack_OnUpdateUncapturedRemoteId(void* group, FrameGroup_OnUpdateUncapturedRemoteId cb);
 
 extern void* CreateFrameCapturer();
 extern void FrameCapturer_Capture(void* capturer);
@@ -29,9 +36,9 @@ extern void FrameCapturer_AddDeltaHealth(void* capturer, int32_t delta);
 extern void FrameCapturer_MoveTo(void* capturer, float x, float y);
 
 extern void* CreateFrameRender();
-extern void FrameRender_SetCallBack_OnMoveTo(void* render, void (*cb)(float x, float y));
-extern void FrameRender_SetCallBack_OnOperate(void* render, void (*cb)(uint32_t type, const char** args, uint32_t rows));
-extern void FrameRender_SetCallBack_OnHealth(void* render, void (*cb)(uint32_t health));
+extern void FrameRender_SetCallBack_OnMoveTo(void* render, FrameRender_OnMoveTo cb);
+extern void FrameRender_SetCallBack_OnOperate(void* render, FrameRender_OnOperate cb);
+extern void FrameRender_SetCallBack_OnHealth(void* render, FrameRender_OnHealth cb);
 #ifdef __cplusplus
 }
 #endif
