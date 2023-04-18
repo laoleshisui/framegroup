@@ -17,7 +17,7 @@ public:
     FrameEncoder();
     ~FrameEncoder();
     
-    std::shared_ptr<PacketItf> Encode(std::shared_ptr<FrameItf> frame);
+    std::shared_ptr<acore::Recycler<PacketItf>::Recyclable> Encode(std::shared_ptr<FrameItf> frame);
 
     static acore::Recycler<PacketItf> available_packets_;
 };

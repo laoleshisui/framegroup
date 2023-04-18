@@ -14,22 +14,22 @@ void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
     // Not necessary to send local frame to render. it's from rendered.
     // SendFrame(frame);
 
-    std::shared_ptr<PacketItf> packet = encoder_->Encode(frame);
+    std::shared_ptr<acore::Recycler<PacketItf>::Recyclable> rpacket = encoder_->Encode(frame);
+    std::shared_ptr<PacketItf> packet = rpacket->Get();
     local_frames_.emplace_back(frame);
     // send to server
     if(SendPacket){
         SendPacket(packet);
     }
-    FrameEncoder::available_packets_.Recycle(packet);
 }
 
 void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
-    std::shared_ptr<FrameItf> frame = decoder_->Decode(std::move(packet));
+    std::shared_ptr<acore::Recycler<FrameItf>::Recyclable> rframe = decoder_->Decode(packet);
+    std::shared_ptr<FrameItf> frame = rframe->Get();
     remote_frames_.emplace_back(frame);
 
     // send to render
     SendFrame(frame);
-    FrameDecoder::available_frames_.Recycle(frame);
 }
 
 void FrameObject::SendFrame(std::shared_ptr<FrameItf> frame){
