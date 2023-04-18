@@ -14,18 +14,14 @@ void FrameCapturer::Capture(){
     std::shared_ptr<acore::Task> task = std::make_shared<acore::Task>();
 
     std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
-    // frame_->operations_.clear();
-    // task->run_ = [=]{
-    //     for (FrameSinkItf* sink : sinks_){
-    //         // copy frame_
-    //         sink->OnFrame(frame_copy);
-    //     }
-    // };
-    // send_task_pool_.PostTask(task);
-    for (FrameSinkItf* sink : sinks_){
-        // copy frame_
-        sink->OnFrame(frame_copy);
-    }
+    frame_->operations_.clear();
+    task->run_ = [=, this]{
+        for (FrameSinkItf* sink : sinks_){
+            // copy frame_
+            sink->OnFrame(frame_copy);
+        }
+    };
+    send_task_pool_.PostTask(task);
 }
 
 void FrameCapturer::AddOperation(Operation op){
