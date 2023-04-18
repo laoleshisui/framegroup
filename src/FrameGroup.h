@@ -29,8 +29,8 @@ class FrameObject;
 class FrameGroup
 {
 public:
-    typedef void(OnUpdateCapturedLocalId_FUNC)(uint64_t local_id, uint64_t remote_id);
-    typedef void(OnUpdateUncapturedRemoteId_FUNC)(uint64_t remote_id);
+    typedef void(OnLogin_FUNC)(int code, int id);
+    typedef void(OnUpdateId_FUNC)(uint64_t local_id, uint64_t remote_id);
 
     FrameGroup();
     ~FrameGroup();
@@ -42,9 +42,9 @@ public:
 
     void AddCapturer(uint64_t local_id, FrameCapturer* capturer);
     void RegisterCaptureredOnServer();
-    void AddRender(uint64_t remote_id, FrameRender* render);
-    std::function<OnUpdateCapturedLocalId_FUNC> OnUpdateCapturedLocalId;
-    std::function<OnUpdateUncapturedRemoteId_FUNC> OnUpdateUncapturedRemoteId;
+    void AddRender(uint64_t local_or_remote_id, FrameRender* render);
+    std::function<OnUpdateId_FUNC> OnUpdateId;
+    std::function<OnLogin_FUNC> OnLogin;
 private:
     uint64_t id_;
     CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;

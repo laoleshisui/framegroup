@@ -68,11 +68,11 @@ target_link_libraries(${PROJECT_NAME} aproto::aproto)
 target_link_libraries(${PROJECT_NAME}_shared aproto::aproto)
 list(APPEND target_dependencies "aproto")
 
-#taskqueue
-find_package(taskqueue REQUIRED CONFIG)
-target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
-target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
-list(APPEND target_dependencies "taskqueue")
+# #taskqueue
+# find_package(taskqueue REQUIRED CONFIG)
+# target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
+# target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
+# list(APPEND target_dependencies "taskqueue")
 
 # use swig to generate other language itf
 find_package(SWIG REQUIRED)
@@ -88,6 +88,11 @@ swig_add_library(${PROJECT_NAME}_api
   OUTPUT_DIR ${CMAKE_SOURCE_DIR}/itf/csharp/ 
   SOURCES ${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i)
 target_link_libraries(${PROJECT_NAME}_api ${PROJECT_NAME})
+
+add_executable(main
+  examples/main.cpp
+)
+target_link_libraries(main ${PROJECT_NAME}_api)
 
 ##-----------######  GenerateCmakePackage  ######-----------
 SET(CMAKE_INSTALL_LIBDIR lib)

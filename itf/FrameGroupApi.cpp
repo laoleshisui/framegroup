@@ -1,8 +1,8 @@
 #include "FrameGroupApi.h"
 
-#include <FrameGroup.h>
-#include <FrameCapturer.h>
-#include <FrameRender.h>
+    #include <FrameGroup.h>
+    #include <FrameCapturer.h>
+    #include <FrameRender.h>
 
 void* CreateFrameGroup(){
     return new framegroup::FrameGroup();
@@ -37,13 +37,13 @@ void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     frame_group->AddRender(remote_id, frame_render);
 }
-void FrameGroup_SetCallBack_OnUpdateCapturedLocalId(void* group, FrameGroup_OnUpdateCapturedLocalId cb){
+void FrameGroup_SetCallBack_OnLogin(void* group, FrameGroup_OnLogin cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->OnUpdateCapturedLocalId = std::move(cb);
+    frame_group->OnLogin = std::move(cb);
 }
-void FrameGroup_SetCallBack_OnUpdateUncapturedRemoteId(void* group, FrameGroup_OnUpdateUncapturedRemoteId cb){
+void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->OnUpdateUncapturedRemoteId = std::move(cb);
+    frame_group->OnUpdateId = std::move(cb);
 }
 
 void* CreateFrameCapturer(){

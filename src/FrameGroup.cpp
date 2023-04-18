@@ -63,9 +63,9 @@ void FrameGroup::AddCapturer(uint64_t local_id, FrameCapturer* capturer){
 void FrameGroup::RegisterCaptureredOnServer(){
     assert(id_);
 
-    if(!id_){
-        return;
-    }
+    // if(!id_){
+    //     return;
+    // }
 
     pframe::RegisterObjects register_objects;
     register_objects.set_group_id(id_);
@@ -75,8 +75,8 @@ void FrameGroup::RegisterCaptureredOnServer(){
     client_.Send(client_.client_bev_, register_objects.SerializeAsString());
 }
 
-void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
-    frame_objects_[remote_id]->AddSink(render);
+void FrameGroup::AddRender(uint64_t local_or_remote_id, FrameRender* render){
+    frame_objects_[local_or_remote_id]->AddSink(render);
 }
 
 void FrameGroup::InitFrameObjects(){
@@ -113,6 +113,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
 
     pframe::Relay relay;
     relay.ParseFromArray(data, *len);
+    std::cout<< "[FrameGroup::RecvCB]" << *len << " " << client << " " << relay.proto_type() << std::endl;
 
     if(relay.proto_type() == pframe::ProtoType::FRAME){
         pframe::Frame frame;
@@ -136,13 +137,15 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         
         if(event.code() == pframe::EventCode::LOGIN_SUCCEED){
             id_ = event.id();
+            OnLogin(1, id_);
         }
         else if(event.code() == pframe::EventCode::LOGIN_FAILED){
             id_ = 0;
+            OnLogin(0, id_);
         }
         else if(event.code() == pframe::EventCode::REGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
-            registered_objects.ParseFromString(std::move(event.data()));
+            registered_objects.ParseFromString(event.data());
             
             CORE_SET<uint64_t> registered_objects_id;
             int i = 0;
@@ -157,19 +160,14 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
                     frame_objects_.insert(std::move(pair));
                 }
 
-                {
-                    //update frame_capturers_' key
-                    CORE_MAP<uint64_t, FrameCapturer*>::node_type pair = frame_capturers_.extract(local_id);
-                    pair.key() = remote_id;
-                    frame_capturers_.insert(std::move(pair));
-                }
-
                 registered_objects_id.insert(remote_id);
-                if(OnUpdateCapturedLocalId){
-                    OnUpdateCapturedLocalId(local_id, remote_id);
+                if(OnUpdateId){
+                    OnUpdateId(local_id, remote_id);
                 }
             }
             captured_objects_id_.swap(registered_objects_id);
+
+            InitFrameObjects();
         }
         else if(event.code() == pframe::EventCode::UNREGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
@@ -178,8 +176,8 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             for(const uint64_t& uncaptured_id : registered_objects.ids()){
                 uncaptured_objects_id_.insert(uncaptured_id);
                 frame_objects_.emplace(uncaptured_id, std::make_unique<FrameObject>());
-                if(OnUpdateUncapturedRemoteId){
-                    OnUpdateUncapturedRemoteId(uncaptured_id);
+                if(OnUpdateId){
+                    OnUpdateId(0, uncaptured_id);
                 }
             }
         }

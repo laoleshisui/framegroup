@@ -13,13 +13,13 @@ namespace framegroup{
 // Encode Frame to Packet
 class FrameEncoder
 {
-public:
+public:    
     FrameEncoder();
     ~FrameEncoder();
     
     std::shared_ptr<PacketItf> Encode(std::shared_ptr<FrameItf> frame);
-private:
-    acore::Recycler<PacketItf> available_packets_;
+
+    static acore::Recycler<PacketItf> available_packets_;
 };
 
 }

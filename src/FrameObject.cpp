@@ -3,7 +3,9 @@
 using namespace framegroup;
 
 FrameObject::FrameObject()
-:id_(0)
+:id_(0),
+encoder_(std::make_unique<FrameEncoder>()),
+decoder_(std::make_unique<FrameDecoder>())
 {}
 
 FrameObject::~FrameObject(){}
@@ -18,6 +20,7 @@ void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
     if(SendPacket){
         SendPacket(packet);
     }
+    FrameEncoder::available_packets_.Recycle(packet);
 }
 
 void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
@@ -26,6 +29,7 @@ void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
 
     // send to render
     SendFrame(frame);
+    FrameDecoder::available_frames_.Recycle(frame);
 }
 
 void FrameObject::SendFrame(std::shared_ptr<FrameItf> frame){

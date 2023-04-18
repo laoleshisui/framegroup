@@ -17,8 +17,8 @@ public:
     ~FrameDecoder();
     
     std::shared_ptr<FrameItf> Decode(std::shared_ptr<PacketItf> packet);
-private:
-    acore::Recycler<FrameItf> available_frames_;
+
+    static acore::Recycler<FrameItf> available_frames_;
 };
 
 }

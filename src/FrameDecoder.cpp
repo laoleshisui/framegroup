@@ -5,6 +5,8 @@
 
 using namespace framegroup;
 
+acore::Recycler<FrameItf> FrameDecoder::available_frames_ = acore::Recycler<FrameItf>();
+
 FrameDecoder::FrameDecoder()
 {}
 FrameDecoder::~FrameDecoder(){}
