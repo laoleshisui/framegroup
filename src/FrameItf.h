@@ -12,6 +12,10 @@ using pframe::OperationType;
 
 class Position{
 public:
+    Position()
+    :x_(0),
+    y_(0)
+    {}
     void ParseFrom(const pframe::Position& pos){
         x_ = pos.x();
         y_ = pos.y();
@@ -51,6 +55,12 @@ public:
 class FrameItf
 {
 public:
+    FrameItf()
+    :idx_(0),
+    type_(pframe::I),
+    ref_frame_idx_(0),
+    health_(0)
+    {}
     void ToProto(pframe::FrameData& pframe){
         pframe.set_idx(idx_);
         pframe.set_frame_type(type_);

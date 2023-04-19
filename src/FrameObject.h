@@ -9,6 +9,7 @@
 #include <string>
 #include <functional>
 #include <mutex>
+#include <shared_mutex>
 
 #include <acore/Type.h>
 
@@ -30,17 +31,21 @@ public:
 
     FrameObject();
     FrameObject(FrameObject&)=delete;
-    explicit FrameObject(FrameObject&& from)=default;
+    explicit FrameObject(FrameObject&& from)=delete;
     ~FrameObject();
 
 private:
     uint64_t id_;
+
+    std::shared_mutex frames_mutex_;
     // Monotonically increasing frame idx
     std::vector<std::shared_ptr<FrameItf>> local_frames_;//from ui_thread, to socket thread
     std::vector<std::shared_ptr<FrameItf>> remote_frames_;//from socket_thread, to ui_thread
+    
     std::unique_ptr<FrameEncoder> encoder_;
     std::unique_ptr<FrameDecoder> decoder_;
 
+    std::mutex effected_mutex_;
     CORE_MAP<uint64_t, CORE_SET<uint64_t>> effected_map_;//idx --> effected object ids
 
     // inputs:

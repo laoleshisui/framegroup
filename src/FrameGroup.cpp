@@ -1,13 +1,15 @@
 #include "FrameGroup.h"
 
 #include "FrameObject.h"
+#include <acore/utils/MapUtils.h>
 
 #include <aproto/pframe/frame.pb.h>
 
 using namespace framegroup;
 
 FrameGroup::FrameGroup()
-:id_(0)
+:id_(0),
+pending_captured_objects_id_(0)
 {
     
     acore::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -51,32 +53,32 @@ void FrameGroup::ExitRoom(uint64_t room_id){
     client_.Send(client_.client_bev_, exit_room.SerializeAsString());
 }
 
-void FrameGroup::AddCapturer(uint64_t local_id, FrameCapturer* capturer){
-    //local id will be replaced by remote id soon.
-    captured_objects_id_.insert(local_id);
-    frame_objects_.emplace(local_id, std::make_unique<FrameObject>());
-    capturer->AddSink(frame_objects_[local_id].get());
-
-    frame_capturers_.emplace(local_id, capturer);
+void FrameGroup::AddObject(){
+    ++pending_captured_objects_id_;
+}
+void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
+    capturer->AddSink(frame_objects_[remote_id].get());
+    frame_capturers_[remote_id] = capturer;
 }
 
 void FrameGroup::RegisterCaptureredOnServer(){
     assert(id_);
-
-    // if(!id_){
-    //     return;
-    // }
+    if(!id_ || !pending_captured_objects_id_){
+        return;
+    }
 
     pframe::RegisterObjects register_objects;
     register_objects.set_group_id(id_);
     register_objects.set_proto_type(pframe::ProtoType::REGISTER_OBJECTS);
-    register_objects.set_num_of_objects(captured_objects_id_.size());
+    register_objects.set_num_of_objects(pending_captured_objects_id_);
     
+    pending_captured_objects_id_ = 0;
+
     client_.Send(client_.client_bev_, register_objects.SerializeAsString());
 }
 
-void FrameGroup::AddRender(uint64_t local_or_remote_id, FrameRender* render){
-    frame_objects_[local_or_remote_id]->AddSink(render);
+void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
+    frame_objects_[remote_id]->AddSink(render);
 }
 
 void FrameGroup::InitFrameObjects(){
@@ -113,7 +115,6 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
 
     pframe::Relay relay;
     relay.ParseFromArray(data, *len);
-    std::cout<< "[FrameGroup::RecvCB]" << *len << " " << client << " " << relay.proto_type() << std::endl;
 
     if(relay.proto_type() == pframe::ProtoType::FRAME){
         pframe::Frame frame;
@@ -146,27 +147,15 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         else if(event.code() == pframe::EventCode::REGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
             registered_objects.ParseFromString(event.data());
-            
-            CORE_SET<uint64_t> registered_objects_id;
-            int i = 0;
-            //Assert captured_objects_id_.size() == registered_objects.size()
-            assert(captured_objects_id_.size() == registered_objects.ids_size());
-            for (const uint64_t& local_id : captured_objects_id_){
-                uint64_t remote_id = registered_objects.ids(i++);
-                {
-                    //update frame_objects_' key
-                    CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::node_type pair = frame_objects_.extract(local_id);
-                    pair.key() = remote_id;
-                    frame_objects_.insert(std::move(pair));
-                }
 
-                registered_objects_id.insert(remote_id);
+            for(const uint64_t& remote_id : registered_objects.ids()){
+                std::lock_guard<std::mutex> lock(objects_id_mutex_);
+                frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
                 if(OnUpdateId){
-                    OnUpdateId(local_id, remote_id);
+                    OnUpdateId(1, remote_id);
                 }
             }
-            captured_objects_id_.swap(registered_objects_id);
-
             InitFrameObjects();
         }
         else if(event.code() == pframe::EventCode::UNREGISTERED_OBJECTS){
@@ -174,8 +163,9 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             registered_objects.ParseFromString(std::move(event.data()));
 
             for(const uint64_t& uncaptured_id : registered_objects.ids()){
-                uncaptured_objects_id_.insert(uncaptured_id);
-                frame_objects_.emplace(uncaptured_id, std::make_unique<FrameObject>());
+                std::lock_guard<std::mutex> lock(objects_id_mutex_);
+                frame_objects_[uncaptured_id] = std::make_unique<FrameObject>();
+                uncaptured_objects_id_.insert(uncaptured_id);//atfer FrameObject being created!
                 if(OnUpdateId){
                     OnUpdateId(0, uncaptured_id);
                 }
@@ -189,42 +179,56 @@ void FrameGroup::EventCB(acore::Server::Client* client, const short event){
 
 
 void FrameGroup::EffectCaculate(uint64_t object_id){
-    if(captured_objects_id_.find(object_id) != captured_objects_id_.end()){
+    std::lock_guard<std::mutex> lock(objects_id_mutex_);
+    std::shared_lock<std::shared_mutex> lock_object_id(frame_objects_[object_id]->frames_mutex_);
+
+    if(captured_objects_id_.contains(object_id)){
         // local frame added
         for(const CORE_SET<uint64_t>::value_type& id : uncaptured_objects_id_){
-            ReviseEffect(frame_objects_[object_id].get(), frame_objects_[object_id]->local_frames_.end()->get(), frame_objects_[id].get(), frame_objects_[id]->remote_frames_.end()->get());
+            std::shared_lock<std::shared_mutex> lock_i(frame_objects_[id]->frames_mutex_);
+            //ensure other has frames
+            if(frame_objects_[id]->remote_frames_.size() > 0){
+                ReviseEffect(frame_objects_[object_id].get(), frame_objects_[object_id]->local_frames_.back().get(), frame_objects_[id].get(), frame_objects_[id]->remote_frames_.back().get());
+            }
         }
-    }else{
+    }else if(uncaptured_objects_id_.contains(object_id)){
         // remote frame received
         // If the network is fine, there is no influence. The main situation is a bad network between CS 
-        for(const CORE_SET<uint64_t>::value_type& id : captured_objects_id_){
-            for (std::vector<std::shared_ptr<FrameItf>>::reverse_iterator it = frame_objects_[id]->local_frames_.rbegin();
-                it != frame_objects_[id]->local_frames_.rend();
+        std::shared_ptr<FrameItf>& last_frame = frame_objects_[object_id]->remote_frames_.back();
+        for(const uint64_t& id : captured_objects_id_){
+            std::shared_lock<std::shared_mutex> lock_i(frame_objects_[id]->frames_mutex_);
+            std::vector<std::shared_ptr<FrameItf>>& captured_local_frames = frame_objects_[id]->local_frames_;
+            for (std::vector<std::shared_ptr<FrameItf>>::reverse_iterator it = captured_local_frames.rbegin();
+                it != captured_local_frames.rend();
                 it++){
-                if((*it)->idx_ == (*(frame_objects_[object_id]->remote_frames_.end()))->idx_){
-                    ReviseEffect(frame_objects_[id].get(), it->get(), frame_objects_[object_id].get(), frame_objects_[object_id]->remote_frames_.end()->get());
+                if((*it)->idx_ == last_frame->idx_){
+                    ReviseEffect(frame_objects_[id].get(), it->get(),
+                        frame_objects_[object_id].get(), last_frame.get());
                 }
-                else if((*it)->idx_ < (*(frame_objects_[object_id]->remote_frames_.end()))->idx_){
+                else if((*it)->idx_ < last_frame->idx_){
                     break;
                 }
                 
             } 
         }
+    }else{
+        //FIXME: error? maybe just ignore it
+        assert(0);
     }
 }
 
 
 void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, FrameObject* other, FrameItf* other_frame){
-    // TODO must judge whether the local frame at this idx has effected this object. If have done, pass.
-    CORE_MAP<uint64_t, CORE_SET<uint64_t>>::iterator effected_pair = decider->effected_map_.find(decider_frame->idx_);
-    if(effected_pair != decider->effected_map_.end()){
-        if(effected_pair->second.find(other->id_) != effected_pair->second.end()){
-            effected_pair->second.insert(other->id_);
-        }else{
+    {
+        std::lock_guard<std::mutex> lg_decider(decider->effected_mutex_);
+        std::lock_guard<std::mutex> lg_other(other->effected_mutex_);
+        
+        CORE_SET<uint64_t>& effected_ids = decider->effected_map_[decider_frame->idx_];
+        if(effected_ids.contains(other->id_)){
             return;
+        }else{
+            effected_ids.insert(other->id_);
         }
-    }else{
-        decider->effected_map_[decider_frame->idx_] = {other->id_};
     }
 
     //effect now!

@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <thread>
+#include <mutex>
 
 #include <acore/Type.h>
 #include <acore/net/Client.h>
@@ -30,7 +31,7 @@ class FrameGroup
 {
 public:
     typedef void(OnLogin_FUNC)(int code, int id);
-    typedef void(OnUpdateId_FUNC)(uint64_t local_id, uint64_t remote_id);
+    typedef void(OnUpdateId_FUNC)(int captured, uint64_t remote_id);
 
     FrameGroup();
     ~FrameGroup();
@@ -40,17 +41,24 @@ public:
     void EnterRoom(uint64_t room_id = 0);
     void ExitRoom(uint64_t room_id = 0);
 
-    void AddCapturer(uint64_t local_id, FrameCapturer* capturer);
+    void AddObject();
+    void AddCapturer(uint64_t remote_id, FrameCapturer* capturer);
     void RegisterCaptureredOnServer();
-    void AddRender(uint64_t local_or_remote_id, FrameRender* render);
+    void AddRender(uint64_t remote_id, FrameRender* render);
     std::function<OnUpdateId_FUNC> OnUpdateId;
     std::function<OnLogin_FUNC> OnLogin;
 private:
     uint64_t id_;
-    CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
+    
+    int pending_captured_objects_id_;//objects's id ready to register in server
+
+    //FIXME: if it need add objects dynamically, those 2 set should be ensured thread-safe, as well as frame_objects_;
+    std::mutex objects_id_mutex_;
+    CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;
     CORE_SET<uint64_t> captured_objects_id_;
     CORE_SET<uint64_t> uncaptured_objects_id_;
+    
     acore::Client client_;
     std::thread client_loop_;
 
