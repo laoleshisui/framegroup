@@ -14,7 +14,7 @@ FrameDecoder::~FrameDecoder(){}
 std::shared_ptr<acore::Recycler<FrameItf>::Recyclable> FrameDecoder::Decode(std::shared_ptr<PacketItf> packet){
     pframe::FrameData pframe;
     pframe.ParseFromString(packet->data_);
-    std::shared_ptr<acore::Recycler<FrameItf>::Recyclable> frame = available_frames_.Request();
+    std::shared_ptr<acore::Recycler<FrameItf>::Recyclable> frame = std::shared_ptr<acore::Recycler<FrameItf>::Recyclable>(available_frames_.Request());
     
     (*frame)->ParseFrom(pframe);
     return frame;

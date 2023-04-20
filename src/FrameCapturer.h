@@ -6,6 +6,7 @@
 #include "FrameItf.h"
 #include "FrameSinkItf.h"
 #include <acore/utils/TaskPool.h>
+#include <acore/utils/Recycler.h>
 
 namespace framegroup{
 
@@ -22,7 +23,11 @@ public:
     void AddOperation(Operation op);
     void AddDeltaHealth(int32_t delta);
     void MoveTo(Position pos);
+
+    static acore::Recycler<acore::Task> available_tasks_;
 private:
+    uint64_t first_frame_time_;
+
     std::mutex frame_mutex_;
     acore::TaskPool send_task_pool_;
 

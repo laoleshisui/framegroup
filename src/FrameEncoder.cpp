@@ -14,7 +14,7 @@ std::shared_ptr<acore::Recycler<PacketItf>::Recyclable> FrameEncoder::Encode(std
     pframe::FrameData pframe;
     frame->ToProto(pframe); 
 
-    std::shared_ptr<acore::Recycler<PacketItf>::Recyclable> packet = available_packets_.Request();
+    std::shared_ptr<acore::Recycler<PacketItf>::Recyclable> packet = std::shared_ptr<acore::Recycler<PacketItf>::Recyclable>(available_packets_.Request());
 
     (*packet)->data_ = pframe.SerializeAsString();
     return packet;
