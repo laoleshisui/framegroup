@@ -41,17 +41,14 @@ public:
     void EnterRoom(uint64_t room_id = 0);
     void ExitRoom(uint64_t room_id = 0);
 
-    void AddObject();
+    void AddCaptureredObjects(int num_of_objects);
     void AddCapturer(uint64_t remote_id, FrameCapturer* capturer);
-    void RegisterCaptureredOnServer();
     void AddRender(uint64_t remote_id, FrameRender* render);
     std::function<OnUpdateId_FUNC> OnUpdateId;
     std::function<OnLogin_FUNC> OnLogin;
 private:
     uint64_t id_;
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
-    
-    int pending_captured_objects_id_;//objects's id ready to register in server
 
     //FIXME: if it need add objects dynamically, those 2 set should be ensured thread-safe, as well as frame_objects_;
     std::mutex objects_id_mutex_;

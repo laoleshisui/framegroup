@@ -8,8 +8,7 @@
 using namespace framegroup;
 
 FrameGroup::FrameGroup()
-:id_(0),
-pending_captured_objects_id_(0)
+:id_(0)
 {
     
     acore::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -53,28 +52,23 @@ void FrameGroup::ExitRoom(uint64_t room_id){
     client_.Send(client_.client_bev_, exit_room.SerializeAsString());
 }
 
-void FrameGroup::AddObject(){
-    ++pending_captured_objects_id_;
-}
-void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
-    capturer->AddSink(frame_objects_[remote_id].get());
-    frame_capturers_[remote_id] = capturer;
-}
-
-void FrameGroup::RegisterCaptureredOnServer(){
+void FrameGroup::AddCaptureredObjects(int num_of_objects){
     assert(id_);
-    if(!id_ || !pending_captured_objects_id_){
+    if(!id_ || !num_of_objects){
         return;
     }
 
     pframe::RegisterObjects register_objects;
     register_objects.set_group_id(id_);
     register_objects.set_proto_type(pframe::ProtoType::REGISTER_OBJECTS);
-    register_objects.set_num_of_objects(pending_captured_objects_id_);
-    
-    pending_captured_objects_id_ = 0;
+    register_objects.set_num_of_objects(num_of_objects);
 
     client_.Send(client_.client_bev_, register_objects.SerializeAsString());
+}
+
+void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
+    capturer->AddSink(frame_objects_[remote_id].get());
+    frame_capturers_[remote_id] = capturer;
 }
 
 void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){

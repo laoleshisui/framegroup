@@ -80,7 +80,6 @@ void thread_capture_02(){
 int main(){
     //01
     frame_group_01 = CreateFrameGroup();
-    FrameGroup_AddObject(frame_group_01);
     frame_capturer_01 = CreateFrameCapturer();
     frame_render_01 = CreateFrameRender();
     FrameRender_SetCallBack_OnMoveTo(frame_render_01, cb_OnMoveTo_01);
@@ -95,14 +94,13 @@ int main(){
 
     FrameGroup_EnterRoom(frame_group_01,1);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    FrameGroup_RegisterCaptureredOnServer(frame_group_01);
+    FrameGroup_AddCaptureredObjects(frame_group_01, 1);
 
     std::thread capturer_thread_01(thread_capture_01);
     capturer_thread_01.detach();
 
     //02
     frame_group_02 = CreateFrameGroup();
-    FrameGroup_AddObject(frame_group_02);
     frame_capturer_02 = CreateFrameCapturer();
     frame_render_02 = CreateFrameRender();
     FrameRender_SetCallBack_OnMoveTo(frame_render_02, cb_OnMoveTo_02);
@@ -117,7 +115,7 @@ int main(){
 
     FrameGroup_EnterRoom(frame_group_02, 1);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    FrameGroup_RegisterCaptureredOnServer(frame_group_02);
+    FrameGroup_AddCaptureredObjects(frame_group_02, 1);
 
     std::thread capturer_thread_02(thread_capture_02);
     capturer_thread_02.detach();

@@ -23,18 +23,14 @@ void FrameGroup_ExitRoom(void* group, uint64_t room_id){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->ExitRoom(room_id);
 }
-void FrameGroup_AddObject(void* group){
-    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->AddObject();
-}
 void FrameGroup_AddCapturer(void* group, uint64_t local_id, void* capturer){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     frame_group->AddCapturer(local_id, frame_capturer);
 }
-void FrameGroup_RegisterCaptureredOnServer(void* group){
+void FrameGroup_AddCaptureredObjects(void* group, int num_of_objects){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->RegisterCaptureredOnServer();
+    frame_group->AddCaptureredObjects(num_of_objects);
 }
 void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
