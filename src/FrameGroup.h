@@ -50,6 +50,8 @@ private:
     uint64_t id_;
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
 
+    std::unique_ptr<FrameTimeController> time_controller_;
+
     //FIXME: if it need add objects dynamically, those 2 set should be ensured thread-safe, as well as frame_objects_;
     std::mutex objects_id_mutex_;
     CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;

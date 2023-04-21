@@ -8,7 +8,8 @@
 using namespace framegroup;
 
 FrameGroup::FrameGroup()
-:id_(0)
+:id_(0),
+time_controller_(std::make_unique<FrameTimeController>())
 {
     
     acore::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -69,6 +70,7 @@ void FrameGroup::AddCaptureredObjects(int num_of_objects){
 void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
     capturer->AddSink(frame_objects_[remote_id].get());
     frame_capturers_[remote_id] = capturer;
+    capturer->AttachTimeController(time_controller_.get());
 }
 
 void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
@@ -95,8 +97,8 @@ void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packe
     frame.set_proto_type(pframe::ProtoType::FRAME);
     frame.set_group_id(id_);
     frame.set_object_id(object_id);
-    frame.set_data(std::move(packet->data_));
 
+    packet->ToProto(frame);
     client_.Send(client_.client_bev_, frame.SerializeAsString());
     EffectCaculate(object_id);
 }
@@ -121,7 +123,8 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::iterator it = frame_objects_.find(object_id);
         if (it != frame_objects_.end()){
             std::shared_ptr<PacketItf> packet = std::make_shared<PacketItf>();
-            packet->data_ = std::move(frame.data());
+            // to PacketItf
+            packet->ParseFrom(frame);
             it->second->OnPacket(packet);
         }
         EffectCaculate(object_id);
@@ -163,6 +166,17 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
                 if(OnUpdateId){
                     OnUpdateId(0, uncaptured_id);
                 }
+            }
+        }
+        else if(event.code() == pframe::EventCode::FRAME_IDX_SYNC){
+            uint64_t client_idx = event.id();
+            uint64_t server_idx = event.target_id();
+            std::cout << "FRAME_IDX_SYNC:" << server_idx << " " <<client_idx << std::endl;
+            if(time_controller_->IsStarted()){
+                time_controller_->Tune(client_idx - server_idx);
+            }else{
+                assert(client_idx == 0);
+                time_controller_->Start(server_idx);
             }
         }
     }

@@ -52,25 +52,27 @@ void cb_FrameGroup_OnUpdateId_02(int captured, uint64_t remote_id){
 }
 
 void cb_OnMoveTo_01(float x, float y){
-    std::cout<<"cb_OnMoveTo_01:" << x <<", " <<y << std::endl;
+    // std::cout<<"cb_OnMoveTo_01:" << x <<", " <<y << std::endl;
 }
 void cb_OnMoveTo_02(float x, float y){
-    std::cout<<"cb_OnMoveTo_02:" << x <<", " <<y << std::endl;
+    // std::cout<<"cb_OnMoveTo_02:" << x <<", " <<y << std::endl;
 }
 
 void thread_capture_01(){
-    static int x = 0, y = 0;
+    static float x = 0, y = 0;
+    FrameCapturer_MoveTo(frame_capturer_01, ++x, ++y);
     while(true){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        FrameCapturer_MoveTo(frame_capturer_01, ++x, ++y);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // FrameCapturer_MoveTo(frame_capturer_01, ++x, ++y);
         FrameCapturer_Capture(frame_capturer_01);
     }
 }
 void thread_capture_02(){
-    static int x = 0, y = 0;
+    static float x = 1, y = 1;
+    FrameCapturer_MoveTo(frame_capturer_02, ++x, ++y);
     while(true){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        FrameCapturer_MoveTo(frame_capturer_02, ++x, ++y);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // FrameCapturer_MoveTo(frame_capturer_02, ++x, ++y);
         FrameCapturer_Capture(frame_capturer_02);
     }
 

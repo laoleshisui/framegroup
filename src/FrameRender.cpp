@@ -10,6 +10,7 @@ OnHealth(0)
 FrameRender::~FrameRender(){}
 
 void FrameRender::Render(std::shared_ptr<FrameItf> frame){
+    std::cout << frame->position_.x_<< " " << frame->idx_ <<std::endl;
     if(OnMoveTo){
         OnMoveTo(frame->position_.x_, frame->position_.y_);
     }

@@ -30,6 +30,8 @@ set(SRC
     src/FrameRender.cpp
     src/FrameSinkItf.h
     src/PacketSinkItf.h
+    src/FrameTimeController.h
+    src/FrameTimeController.cpp
 )
 set(API_INCLUDE
     src/FrameCapturer.h
@@ -67,6 +69,12 @@ find_package(aproto REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} aproto::aproto)
 target_link_libraries(${PROJECT_NAME}_shared aproto::aproto)
 list(APPEND target_dependencies "aproto")
+
+#taskqueue
+find_package(taskqueue REQUIRED CONFIG)
+target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
+target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
+list(APPEND target_dependencies "taskqueue")
 
 # #taskqueue
 # find_package(taskqueue REQUIRED CONFIG)

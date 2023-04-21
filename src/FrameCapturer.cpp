@@ -1,11 +1,12 @@
 #include "FrameCapturer.h"
 
+#include <taskqueue/time_utils.h>
 using namespace framegroup;
 
 acore::Recycler<acore::Task> FrameCapturer::available_tasks_ = acore::Recycler<acore::Task>();
 
 FrameCapturer::FrameCapturer()
-:first_frame_time_(0),
+:time_controller_(nullptr),
 send_task_pool_(1),
 frame_(std::make_unique<FrameItf>())
 {
@@ -14,8 +15,14 @@ FrameCapturer::~FrameCapturer(){}
 
 void FrameCapturer::Capture(){
     std::lock_guard<std::mutex> lg(frame_mutex_);
-    std::shared_ptr<acore::Recycler<acore::Task>::Recyclable> task = std::shared_ptr<acore::Recycler<acore::Task>::Recyclable>(available_tasks_.Request());
 
+    if(!time_controller_ || !time_controller_->UpdateFrameIdx(frame_->idx_)){
+        return;
+    }
+    // std::cout << "Capture : one" << frame_->idx_ <<std::endl;
+
+    std::shared_ptr<acore::Recycler<acore::Task>::Recyclable> task = std::shared_ptr<acore::Recycler<acore::Task>::Recyclable>(available_tasks_.Request());
+    
     std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
     frame_->operations_.clear();
     (*task)->run_ = [=, this]{
@@ -25,6 +32,11 @@ void FrameCapturer::Capture(){
         }
     };
     send_task_pool_.PostTask((*task));
+}
+
+
+void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
+    time_controller_ = time_controller;
 }
 
 void FrameCapturer::AddOperation(Operation op){
