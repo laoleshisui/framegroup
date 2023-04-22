@@ -24,7 +24,7 @@ void FrameCapturer::Capture(){
     std::shared_ptr<acore::Recycler<acore::Task>::Recyclable> task = std::shared_ptr<acore::Recycler<acore::Task>::Recyclable>(available_tasks_.Request());
     
     std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
-    frame_->operations_.clear();
+    frame_->processes_.clear();
     (*task)->run_ = [=, this]{
         for (FrameSinkItf* sink : sinks_){
             // copy frame_
@@ -39,15 +39,16 @@ void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
     time_controller_ = time_controller;
 }
 
-void FrameCapturer::AddOperation(Operation op){
+
+void FrameCapturer::AddState(pframe::StateType type, std::vector<std::string> values){
     std::lock_guard<std::mutex> lg(frame_mutex_);
-    frame_->operations_.push_back(std::move(op));
+    frame_->states_.emplace_back();
+    frame_->states_.back().type_ = type;
+    frame_->states_.back().values_ = std::move(values);
 }
-void FrameCapturer::AddDeltaHealth(int32_t delta){
+void FrameCapturer::AddProcess(pframe::ProcessType type, std::vector<std::string> args){
     std::lock_guard<std::mutex> lg(frame_mutex_);
-    frame_->health_ += delta;
-}
-void FrameCapturer::MoveTo(Position pos){
-    std::lock_guard<std::mutex> lg(frame_mutex_);
-    frame_->position_ = std::move(pos);
+    frame_->processes_.emplace_back();
+    frame_->processes_.back().type_ = type;
+    frame_->processes_.back().args_ = std::move(args);
 }

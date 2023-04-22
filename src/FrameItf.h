@@ -7,90 +7,118 @@
 
 namespace framegroup{
 
-using pframe::FrameType;
-using pframe::OperationType;
+using pframe::StateType;
+using pframe::ProcessType;
 
-class Position{
+class State{
 public:
-    Position()
-    :x_(0),
-    y_(0)
-    {}
-    void ParseFrom(const pframe::Position& pos){
-        x_ = pos.x();
-        y_ = pos.y();
+    void ToProto(pframe::State& pstate){
+        // pframe::StateType ptype;
+        // if(type_ == "FRAME_TYPE"){
+        //     ptype = pframe::StateType::FRAME_TYPE;
+        // }
+        // else if(type_ == "POSITION"){
+        //     ptype = pframe::StateType::POSITION;
+        // }
+        // else{
+        //     //err
+        //     assert(0);
+        //     return;
+        // }
+        pstate.set_type(type_);
+        for(std::string& i : values_){
+            pstate.add_values(i);
+        }
     }
-    void ToProto(pframe::Position& pos){
-        pos.set_x(x_);
-        pos.set_y(y_);
+    void ParseFrom(const pframe::State& pstate){
+        // if(pstate.type() == pframe::StateType::FRAME_TYPE){
+        //     type_ = "FRAME_TYPE";
+        // }else if(pstate.type() == pframe::StateType::POSITION){
+        //     type_ = "POSITION";
+        // }else{
+        //     assert(0);
+        //     return;
+        // }
+        type_ = pstate.type();
+        for(const std::string& i : pstate.values()){
+            values_.push_back(i);
+        }
     }
-    static float Distance(Position& p1, Position& p2){
-        return std::hypot((p1.x_ - p2.x_),(p1.y_ - p2.y_));
-    }
-
-    float x_;
-    float y_;
+    StateType type_;
+    std::vector<std::string> values_;
 };
-
-class Operation{
+class Process{
 public:
-    void ParseFrom(const pframe::Operation& pop){
-        type_ = pop.type();
-        for(int i = 0; i < pop.args_size(); i++){
-            args_.emplace_back(pop.args(i));
+    void ToProto(pframe::Process& pprocess){
+        // pframe::ProcessType ptype;
+        // if(type_ == "FRAME_TYPE"){
+        //     ptype = pframe::ProcessType::FRAME_TYPE;
+        // }
+        // else if(type_ == "POSITION"){
+        //     ptype = pframe::ProcessType::POSITION;
+        // }
+        // else{
+        //     //err
+        //     assert(0);
+        //     return;
+        // }
+        pprocess.set_type(type_);
+        for(std::string& i : args_){
+            pprocess.add_args(i);
         }
     }
-    void ToProto(pframe::Operation& pop){
-        pop.set_type(type_);
-        for(std::string& arg : args_){
-            pop.add_args()->assign(arg);
-        }
-    }
-    
-    OperationType type_;
-    std::vector<std::string> args_;
 
+    void ParseFrom(const pframe::Process& pprocess){
+        // if(pprocess.type() == pframe::ProcessType::RANGE_DAMAGE){
+        //     type_ = "RANGE_DAMAGE";
+        // }else if(pprocess.type() == pframe::ProcessType::DAMAGED){
+        //     type_ = "DAMAGED";
+        // }else{
+        //     assert(0);
+        //     return;
+        // }
+        type_ = pprocess.type();
+
+        for(const std::string& i : pprocess.args()){
+            args_.push_back(i);
+        }
+    }
+    ProcessType type_;
+    std::vector<std::string> args_;
 };
 
 class FrameItf
 {
 public:
     FrameItf()
-    :idx_(0),
-    type_(pframe::I),
-    ref_frame_idx_(0),
-    health_(0)
+    :idx_(0)
     {}
     void ToProto(pframe::FrameData& pframe){
         pframe.set_idx(idx_);
-        pframe.set_frame_type(type_);
-        pframe.set_ref_frame_idx(ref_frame_idx_);
-        position_.ToProto(*(pframe.mutable_position()));
-
-        for(Operation& op : operations_){
-            op.ToProto(*(pframe.add_operations()));
+        for(State& i : states_){
+            pframe::State* p = pframe.add_states();
+            i.ToProto(*p);
         }
-        pframe.set_health(health_);
+        for(Process& i : processes_){
+            pframe::Process* p = pframe.add_processes();
+            i.ToProto(*p);
+        }
     }
     void ParseFrom(const pframe::FrameData& pframe){
         idx_ = pframe.idx();
-        type_ = pframe.frame_type();
-        ref_frame_idx_ = pframe.ref_frame_idx();
-        position_.ParseFrom(pframe.position());
-        for(int i = 0; i < pframe.operations_size(); i++){
-            Operation op;
-            op.ParseFrom(pframe.operations(i));
-            operations_.push_back(std::move(op));
+        for(const pframe::State& i : pframe.states()){
+            states_.emplace_back();
+            states_.back().ParseFrom(i);
         }
-        health_ = pframe.health();
+        for(const pframe::Process& i : pframe.processes()){
+            processes_.emplace_back();
+            processes_.back().ParseFrom(i);
+        }
     }
 
     uint64_t idx_;
-    FrameType type_;
-    uint64_t ref_frame_idx_;
-    Position position_;
-    std::vector<Operation> operations_;
-    uint32_t health_;
+    std::vector<State> states_;
+    std::vector<Process> processes_;
 };
 }
 #endif

@@ -1,8 +1,17 @@
 #include "FrameGroupApi.h"
 
-    #include <FrameGroup.h>
-    #include <FrameCapturer.h>
-    #include <FrameRender.h>
+#include <FrameGroup.h>
+#include <FrameCapturer.h>
+#include <FrameRender.h>
+
+FrameRender_OnMoveTo on_move = 0;
+void Render_OnState(pframe::StateType& type, std::vector<std::string>& values){
+    if(type == pframe::StateType::POSITION){
+        if(on_move){
+            on_move(std::stof(values[0]), std::stof(values[1]));
+        }
+    }
+}
 
 void* CreateFrameGroup(){
     return new framegroup::FrameGroup();
@@ -53,25 +62,23 @@ void FrameCapturer_Capture(void* capturer){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     frame_capturer->Capture();
 }
-void FrameCapturer_AddOperation(void* capturer, uint32_t type, char** args, uint32_t rows){
+void FrameCapturer_AddProcess(void* capturer, uint32_t type, char** args, uint32_t rows){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    framegroup::Operation opration;
-    opration.type_ = pframe::OperationType(type);
+    framegroup::Process process;
+    process.type_ = pframe::ProcessType(type);
     for(int i = 0; i < rows; ++i){
-        opration.args_.push_back(std::string(args[i]));
+        process.args_.push_back(std::string(args[i]));
     }
-    frame_capturer->AddOperation(std::move(opration));
+    frame_capturer->AddProcess(process.type_, std::move(process.args_));
 }
-void FrameCapturer_AddDeltaHealth(void* capturer, int32_t delta){
+void FrameCapturer_SetHealth(void* capturer, int32_t health){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    frame_capturer->AddDeltaHealth(delta);
+    frame_capturer->AddState(pframe::StateType::HEALTH, {std::to_string(health)});
 }
 void FrameCapturer_MoveTo(void* capturer, float x, float y){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    framegroup::Position pos;
-    pos.x_ = x;
-    pos.y_ = y;
-    frame_capturer->MoveTo(std::move(pos));
+    std::vector<std::string> pos = {std::to_string(x), std::to_string(y)};
+    frame_capturer->AddState(pframe::StateType::POSITION, std::move(pos));
 }
 
 void* CreateFrameRender(){
@@ -80,13 +87,15 @@ void* CreateFrameRender(){
 
 void FrameRender_SetCallBack_OnMoveTo(void* render, FrameRender_OnMoveTo cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    frame_render->OnMoveTo = cb;
+    on_move = cb;
+    frame_render->OnState = Render_OnState;
+    // frame_render->OnMoveTo = cb;
 }
 void FrameRender_SetCallBack_OnOperate(void* render, FrameRender_OnOperate cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    frame_render->OnOperate = cb;
+    // frame_render->OnOperate = cb;
 }
 void FrameRender_SetCallBack_OnHealth(void* render, FrameRender_OnHealth cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    frame_render->OnHealth = cb;
+    // frame_render->OnHealth = cb;
 }

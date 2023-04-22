@@ -20,9 +20,10 @@ public:
     ~FrameCapturer();
 
     void Capture();
-    void AddOperation(Operation op);
-    void AddDeltaHealth(int32_t delta);
-    void MoveTo(Position pos);
+
+    void AddState(pframe::StateType type, std::vector<std::string> values);
+    void AddProcess(pframe::ProcessType type, std::vector<std::string> args);
+
 
     void AttachTimeController(FrameTimeController* time_controller);
 

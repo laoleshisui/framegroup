@@ -241,6 +241,8 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
 
     //effect now!
     //Attach effect in the nearest Frame
+
+#if 0
     for(Operation& op : decider_frame->operations_){
         if(op.type_ == pframe::RANGE_DAMAGE){
             /**
@@ -280,4 +282,5 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
             }
         }
     }
+#endif
 }

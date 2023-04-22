@@ -27,6 +27,7 @@ void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
 }
 
 void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
+    // std::cout << " " << packet->idx_ <<std::endl;
     std::shared_ptr<acore::Recycler<FrameItf>::Recyclable> rframe = decoder_->Decode(packet);
     std::shared_ptr<FrameItf> frame = rframe->Get();
     {

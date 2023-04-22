@@ -32,8 +32,8 @@ extern void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId
 
 extern void* CreateFrameCapturer();
 extern void FrameCapturer_Capture(void* capturer);
-extern void FrameCapturer_AddOperation(void* capturer, uint32_t type, char** args, uint32_t rows);
-extern void FrameCapturer_AddDeltaHealth(void* capturer, int32_t delta);
+extern void FrameCapturer_AddProcess(void* capturer, uint32_t type, char** args, uint32_t rows);
+extern void FrameCapturer_SetHealth(void* capturer, int32_t health);
 extern void FrameCapturer_MoveTo(void* capturer, float x, float y);
 
 extern void* CreateFrameRender();
