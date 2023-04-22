@@ -5,7 +5,6 @@
 #include <acore/net/Client.h>
 
 #include "../itf/FrameGroupApi.h"
-#include "FrameClient.h"
 
 #include <mutex>
 #include <condition_variable>

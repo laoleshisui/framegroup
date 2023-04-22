@@ -2,9 +2,16 @@ cmake_minimum_required(VERSION 3.12)
 
 project(framegroup)
 
-set(CMAKE_CXX_FLAGS
-    -std=c++20
-)
+if (CMAKE_SYSTEM_NAME MATCHES "Linux") 
+    MESSAGE(STATUS "current platform: Linux ")
+    set(CMAKE_CXX_FLAGS  -std=c++2a)
+else () 
+    set(CMAKE_CXX_FLAGS  -std=c++20)
+    MESSAGE(STATUS "other platform: ${CMAKE_SYSTEM_NAME}") 
+endif (CMAKE_SYSTEM_NAME MATCHES "Linux")
+
+# set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
+
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(
@@ -51,36 +58,31 @@ add_library(
     ${SRC}
 )
 
-add_library(
-    ${PROJECT_NAME}_shared SHARED
-    ${SRC}
-)
+# add_library(
+#     ${PROJECT_NAME}_shared SHARED
+#     ${SRC}
+# )
 
 
 #deps
 #acore
 find_package(acore REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} acore::acore)
-target_link_libraries(${PROJECT_NAME}_shared acore::acore)
+# target_link_libraries(${PROJECT_NAME}_shared acore::acore)
 list(APPEND target_dependencies "acore")
 
 #aproto
 find_package(aproto REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} aproto::aproto)
-target_link_libraries(${PROJECT_NAME}_shared aproto::aproto)
+# target_link_libraries(${PROJECT_NAME}_shared aproto::aproto)
 list(APPEND target_dependencies "aproto")
 
 #taskqueue
 find_package(taskqueue REQUIRED CONFIG)
 target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
-target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
+# target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
 list(APPEND target_dependencies "taskqueue")
 
-# #taskqueue
-# find_package(taskqueue REQUIRED CONFIG)
-# target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
-# target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
-# list(APPEND target_dependencies "taskqueue")
 
 # use swig to generate other language itf
 find_package(SWIG REQUIRED)
@@ -91,7 +93,7 @@ SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i
 SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i 
   PROPERTIES OUTFILE_DIR ${CMAKE_SOURCE_DIR}/itf/swig/)
 swig_add_library(${PROJECT_NAME}_api
-  TYPE SHARED 
+  TYPE STATIC 
   LANGUAGE csharp
   OUTPUT_DIR ${CMAKE_SOURCE_DIR}/itf/csharp/ 
   SOURCES ${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i)
@@ -113,8 +115,9 @@ target_include_directories(${PROJECT_NAME}
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 # fill include and lib
-install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_shared ${PROJECT_NAME}_api
-EXPORT ${PROJECT_NAME}Targets
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_api
+  # ${PROJECT_NAME}_shared
+  EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

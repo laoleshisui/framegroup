@@ -6,6 +6,7 @@
 #ifndef __FRAMEGROUPAPI_H
 #define __FRAMEGROUPAPI_H
 #include <math.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C"{
