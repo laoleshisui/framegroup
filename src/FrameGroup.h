@@ -32,6 +32,7 @@ class FrameGroup
 public:
     typedef void(OnLogin_FUNC)(int code, int id);
     typedef void(OnUpdateId_FUNC)(int captured, uint64_t remote_id);
+    typedef void(OnEffect_FUNC)(uint64_t decider_remote_id, pframe::ProcessType process_type, std::vector<std::string>& args, uint64_t other_remote_id, pframe::StateType state_type, std::vector<std::string>& values);
 
     FrameGroup();
     ~FrameGroup();
@@ -46,6 +47,7 @@ public:
     void AddRender(uint64_t remote_id, FrameRender* render);
     std::function<OnUpdateId_FUNC> OnUpdateId;
     std::function<OnLogin_FUNC> OnLogin;
+    std::function<OnEffect_FUNC> OnEffect;
 private:
     uint64_t id_;
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>

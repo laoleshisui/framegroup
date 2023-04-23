@@ -14,6 +14,7 @@ extern "C"{
 
 typedef void(*FrameGroup_OnLogin)(int code, int id);
 typedef void(*FrameGroup_OnUpdateId)(int captured, uint64_t remote_id);
+typedef void(*FrameGroup_OnEffect)(uint64_t decider_remote_id, uint32_t process_type, const char** args, uint64_t other_remote_id, int args_rows, const uint32_t state_type, const char** values, int values_rows);
 typedef void (*FrameRender_OnState)(const uint32_t type, const char** values, int rows);
 typedef void (*FrameRender_OnProcess)(const uint32_t type, const char** args, int rows);
 
@@ -27,6 +28,7 @@ extern void FrameGroup_AddCaptureredObjects(void* group, int num_of_objects);
 extern void FrameGroup_AddRender(void* group, uint64_t local_or_remote_id, void* render);
 extern void FrameGroup_SetCallBack_OnLogin(void* group, FrameGroup_OnLogin cb);
 extern void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb);
+extern void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb);
 
 extern void* CreateFrameCapturer();
 extern void FrameCapturer_Capture(void* capturer);

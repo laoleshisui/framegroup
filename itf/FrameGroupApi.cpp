@@ -45,7 +45,21 @@ void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->OnUpdateId = std::move(cb);
 }
-
+void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, pframe::ProcessType process_type, std::vector<std::string>& args, uint64_t other_remote_id, pframe::StateType state_type, std::vector<std::string>& values){
+        std::vector<const char*> jargs;
+        for(int i = 0; i < args.size(); ++i){
+            jargs.push_back(args[i].c_str());
+        }
+        std::vector<const char*> jvalues;
+        for(int i = 0; i < values.size(); ++i){
+            jvalues.push_back(values[i].c_str());
+        }
+        cb(decider_remote_id, (uint32_t)process_type, jargs.data(), jargs.size(), other_remote_id, (uint32_t)state_type, jvalues.data(), jvalues.size());
+    };
+    frame_group->OnEffect = std::move(jcb);
+}
 void* CreateFrameCapturer(){
     return new framegroup::FrameCapturer();
 }
@@ -87,11 +101,11 @@ void FrameRender_SetCallBack_OnState(void* render, FrameRender_OnState cb){
 void FrameRender_SetCallBack_OnProcess(void* render, FrameRender_OnProcess cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     std::function<framegroup::FrameRender::OnProcess_FUNC> jcb = [=](const pframe::ProcessType& type, const std::vector<std::string>& args){
-        std::vector<const char*> jvalues;
+        std::vector<const char*> jargs;
         for(int i = 0; i < args.size(); ++i){
-            jvalues.push_back(args[i].c_str());
+            jargs.push_back(args[i].c_str());
         }
-        cb((uint32_t)type, jvalues.data(), jvalues.size());
+        cb((uint32_t)type, jargs.data(), jargs.size());
     };
     frame_render->OnProcess = std::move(jcb);
 }
