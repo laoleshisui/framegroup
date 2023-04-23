@@ -14,10 +14,8 @@ extern "C"{
 
 typedef void(*FrameGroup_OnLogin)(int code, int id);
 typedef void(*FrameGroup_OnUpdateId)(int captured, uint64_t remote_id);
-typedef void(*FrameRender_OnMoveTo)(float x, float y);
-typedef void(*FrameRender_OnOperate)(uint32_t type, const char** args, uint32_t rows);
-typedef void(*FrameRender_OnHealth)(uint32_t health);
-
+typedef void (*FrameRender_OnState)(const uint32_t type, const char** values, int rows);
+typedef void (*FrameRender_OnProcess)(const uint32_t type, const char** args, int rows);
 
 extern void* CreateFrameGroup();
 extern void FrameGroup_Connect(void* group, char* ip, int port);
@@ -32,14 +30,12 @@ extern void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId
 
 extern void* CreateFrameCapturer();
 extern void FrameCapturer_Capture(void* capturer);
+extern void FrameCapturer_SetState(void* capturer, uint32_t type, char** values, uint32_t rows);
 extern void FrameCapturer_AddProcess(void* capturer, uint32_t type, char** args, uint32_t rows);
-extern void FrameCapturer_SetHealth(void* capturer, int32_t health);
-extern void FrameCapturer_MoveTo(void* capturer, float x, float y);
 
 extern void* CreateFrameRender();
-extern void FrameRender_SetCallBack_OnMoveTo(void* render, FrameRender_OnMoveTo cb);
-extern void FrameRender_SetCallBack_OnOperate(void* render, FrameRender_OnOperate cb);
-extern void FrameRender_SetCallBack_OnHealth(void* render, FrameRender_OnHealth cb);
+extern void FrameRender_SetCallBack_OnState(void* render, FrameRender_OnState cb);
+extern void FrameRender_SetCallBack_OnProcess(void* render, FrameRender_OnProcess cb);
 #ifdef __cplusplus
 }
 #endif

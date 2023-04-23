@@ -21,7 +21,7 @@ public:
 
     void Capture();
 
-    void AddState(pframe::StateType type, std::vector<std::string> values);
+    void SetState(pframe::StateType type, std::vector<std::string> values);
     void AddProcess(pframe::ProcessType type, std::vector<std::string> args);
 
 

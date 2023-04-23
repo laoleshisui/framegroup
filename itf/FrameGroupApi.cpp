@@ -4,15 +4,6 @@
 #include <FrameCapturer.h>
 #include <FrameRender.h>
 
-FrameRender_OnMoveTo on_move = 0;
-void Render_OnState(pframe::StateType& type, std::vector<std::string>& values){
-    if(type == pframe::StateType::POSITION){
-        if(on_move){
-            on_move(std::stof(values[0]), std::stof(values[1]));
-        }
-    }
-}
-
 void* CreateFrameGroup(){
     return new framegroup::FrameGroup();
 }
@@ -62,40 +53,45 @@ void FrameCapturer_Capture(void* capturer){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     frame_capturer->Capture();
 }
+void FrameCapturer_SetState(void* capturer, uint32_t type, char** values, uint32_t rows){
+    framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
+    std::vector<std::string> jvalues;
+    for(int i = 0; i < rows; ++i){
+        jvalues.push_back(std::string(values[i]));
+    }
+    frame_capturer->SetState(pframe::StateType(type), std::move(jvalues));
+}
 void FrameCapturer_AddProcess(void* capturer, uint32_t type, char** args, uint32_t rows){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    framegroup::Process process;
-    process.type_ = pframe::ProcessType(type);
+    std::vector<std::string> jargs;
     for(int i = 0; i < rows; ++i){
-        process.args_.push_back(std::string(args[i]));
+        jargs.push_back(std::string(args[i]));
     }
-    frame_capturer->AddProcess(process.type_, std::move(process.args_));
-}
-void FrameCapturer_SetHealth(void* capturer, int32_t health){
-    framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    frame_capturer->AddState(pframe::StateType::HEALTH, {std::to_string(health)});
-}
-void FrameCapturer_MoveTo(void* capturer, float x, float y){
-    framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    std::vector<std::string> pos = {std::to_string(x), std::to_string(y)};
-    frame_capturer->AddState(pframe::StateType::POSITION, std::move(pos));
+    frame_capturer->AddProcess(pframe::ProcessType(type), std::move(jargs));
 }
 
 void* CreateFrameRender(){
     return new framegroup::FrameRender();
 }
-
-void FrameRender_SetCallBack_OnMoveTo(void* render, FrameRender_OnMoveTo cb){
+void FrameRender_SetCallBack_OnState(void* render, FrameRender_OnState cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    on_move = cb;
-    frame_render->OnState = Render_OnState;
-    // frame_render->OnMoveTo = cb;
+    std::function<framegroup::FrameRender::OnState_FUNC> jcb = [=](const pframe::StateType& type, const std::vector<std::string>& values){
+        std::vector<const char*> jvalues;
+        for(int i = 0; i < values.size(); ++i){
+            jvalues.push_back(values[i].c_str());
+        }
+        cb((uint32_t)type, jvalues.data(), jvalues.size());
+    };
+    frame_render->OnState = std::move(jcb);
 }
-void FrameRender_SetCallBack_OnOperate(void* render, FrameRender_OnOperate cb){
+void FrameRender_SetCallBack_OnProcess(void* render, FrameRender_OnProcess cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    // frame_render->OnOperate = cb;
-}
-void FrameRender_SetCallBack_OnHealth(void* render, FrameRender_OnHealth cb){
-    framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    // frame_render->OnHealth = cb;
+    std::function<framegroup::FrameRender::OnProcess_FUNC> jcb = [=](const pframe::ProcessType& type, const std::vector<std::string>& args){
+        std::vector<const char*> jvalues;
+        for(int i = 0; i < args.size(); ++i){
+            jvalues.push_back(args[i].c_str());
+        }
+        cb((uint32_t)type, jvalues.data(), jvalues.size());
+    };
+    frame_render->OnProcess = std::move(jcb);
 }

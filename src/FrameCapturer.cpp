@@ -40,11 +40,9 @@ void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
 }
 
 
-void FrameCapturer::AddState(pframe::StateType type, std::vector<std::string> values){
+void FrameCapturer::SetState(pframe::StateType type, std::vector<std::string> values){
     std::lock_guard<std::mutex> lg(frame_mutex_);
-    frame_->states_.emplace_back();
-    frame_->states_.back().type_ = type;
-    frame_->states_.back().values_ = std::move(values);
+    frame_->states_[type] = std::move(values);
 }
 void FrameCapturer::AddProcess(pframe::ProcessType type, std::vector<std::string> args){
     std::lock_guard<std::mutex> lg(frame_mutex_);

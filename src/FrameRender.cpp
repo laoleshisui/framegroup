@@ -3,16 +3,16 @@
 using namespace framegroup;
 
 FrameRender::FrameRender()
-:OnState(0),
-OnProcess(0)
+:OnState(nullptr),
+OnProcess(nullptr)
 {}
 FrameRender::~FrameRender(){}
 
 void FrameRender::Render(std::shared_ptr<FrameItf> frame){
     std::cout << " " << frame->idx_ <<std::endl;
     if(OnState){
-        for(State& i : frame->states_){
-            OnState(i.type_, i.values_);
+        for(CORE_MAP<StateType, std::vector<std::string>>::value_type& i : frame->states_){
+            OnState(i.first, i.second);
         }
     }
     if(OnProcess){

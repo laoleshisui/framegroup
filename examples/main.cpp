@@ -50,16 +50,19 @@ void cb_FrameGroup_OnUpdateId_02(int captured, uint64_t remote_id){
     }
 }
 
-void cb_OnMoveTo_01(float x, float y){
-    // std::cout<<"cb_OnMoveTo_01:" << x <<", " <<y << std::endl;
+void cb_OnState_01(const uint32_t type, const char** values, int rows){
+    std::cout<<"cb_OnState_01:" << values[0] << std::endl;
 }
-void cb_OnMoveTo_02(float x, float y){
-    // std::cout<<"cb_OnMoveTo_02:" << x <<", " <<y << std::endl;
+void cb_OnState_02(const uint32_t type, const char** values, int rows){
+    std::cout<<"cb_OnState_02:" << values[0] << std::endl;
 }
 
 void thread_capture_01(){
     static float x = 0, y = 0;
-    FrameCapturer_MoveTo(frame_capturer_01, ++x, ++y);
+    static char* values[10];
+    values[0] = "1";
+    values[1] = "1";
+    FrameCapturer_SetState(frame_capturer_01, 1 , values, 2);
     while(true){
         // std::this_thread::sleep_for(std::chrono::milliseconds(100));
         // FrameCapturer_MoveTo(frame_capturer_01, ++x, ++y);
@@ -68,7 +71,10 @@ void thread_capture_01(){
 }
 void thread_capture_02(){
     static float x = 1, y = 1;
-    FrameCapturer_MoveTo(frame_capturer_02, ++x, ++y);
+    static char* values[10];
+    values[0] = "2";
+    values[1] = "2";
+    FrameCapturer_SetState(frame_capturer_01, 1 , values, 2);
     while(true){
         // std::this_thread::sleep_for(std::chrono::milliseconds(100));
         // FrameCapturer_MoveTo(frame_capturer_02, ++x, ++y);
@@ -83,7 +89,7 @@ int main(){
     frame_group_01 = CreateFrameGroup();
     frame_capturer_01 = CreateFrameCapturer();
     frame_render_01 = CreateFrameRender();
-    FrameRender_SetCallBack_OnMoveTo(frame_render_01, cb_OnMoveTo_01);
+    FrameRender_SetCallBack_OnState(frame_render_01, cb_OnState_01);
 
     FrameGroup_Connect(frame_group_01, "127.0.0.1", 10002);
     FrameGroup_SetCallBack_OnLogin(frame_group_01, cb_FrameGroup_OnLogin_01);
@@ -104,7 +110,7 @@ int main(){
     frame_group_02 = CreateFrameGroup();
     frame_capturer_02 = CreateFrameCapturer();
     frame_render_02 = CreateFrameRender();
-    FrameRender_SetCallBack_OnMoveTo(frame_render_02, cb_OnMoveTo_02);
+    FrameRender_SetCallBack_OnState(frame_render_02, cb_OnState_02);
 
     FrameGroup_Connect(frame_group_02, "127.0.0.1", 10002);
     FrameGroup_SetCallBack_OnLogin(frame_group_02, cb_FrameGroup_OnLogin_02);

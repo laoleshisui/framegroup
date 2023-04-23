@@ -11,14 +11,17 @@ namespace framegroup{
 class FrameRender : public FrameSinkItf
 {
 public:
+    typedef void (OnState_FUNC)(const pframe::StateType& type, const std::vector<std::string>& values);
+    typedef void (OnProcess_FUNC)(const pframe::ProcessType& type, const std::vector<std::string>& args);
+
     FrameRender();
     ~FrameRender();
     
     virtual void Render(std::shared_ptr<FrameItf> frame);
     virtual void OnFrame(std::shared_ptr<FrameItf> frame) override;
 
-    void (*OnState)(pframe::StateType& type, std::vector<std::string>& values);
-    void (*OnProcess)(pframe::ProcessType& type, std::vector<std::string>& args);
+    std::function<OnState_FUNC> OnState;
+    std::function<OnProcess_FUNC> OnProcess;
 private:
 };
 
