@@ -32,7 +32,7 @@ class FrameGroup
 public:
     typedef void(OnLogin_FUNC)(int code, int id);
     typedef void(OnUpdateId_FUNC)(int captured, uint64_t remote_id);
-    typedef void(OnEffect_FUNC)(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
+    typedef bool(OnEffect_FUNC)(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
 
     FrameGroup();
     ~FrameGroup();
@@ -65,7 +65,7 @@ private:
 
     // All data is received, will start soon;
     // Maybe a signal from server to start.
-    void InitFrameObjects();
+    void InitCapturedFrameObjects();
 
     void RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len);
     void EventCB(acore::Server::Client* client, const short event);

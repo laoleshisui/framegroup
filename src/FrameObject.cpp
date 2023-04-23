@@ -18,7 +18,7 @@ void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
     std::shared_ptr<PacketItf> packet = rpacket->Get();
     {
         std::unique_lock<std::shared_mutex> lock(frames_mutex_);
-        local_frames_.emplace_back(frame);
+        local_frames_.push_back(frame);
     }
     // send to server
     if(SendPacket){
@@ -27,16 +27,18 @@ void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
 }
 
 void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
-    // std::cout << " " << packet->idx_ <<std::endl;
     std::shared_ptr<acore::Recycler<FrameItf>::Recyclable> rframe = decoder_->Decode(packet);
     std::shared_ptr<FrameItf> frame = rframe->Get();
+    std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame.get()));
     {
         std::unique_lock<std::shared_mutex> lock(frames_mutex_);
-        remote_frames_.emplace_back(frame);
+        remote_frames_.push_back(frame_copy);
     }
 
     // send to render
     SendFrame(frame);
+
+    std::cout << id_ << ": " << frame->idx_ << " "<< frame->states_["POSITION"][0]<< " " << frame->states_["POSITION"][1]<<std::endl;
 }
 
 void FrameObject::SendFrame(std::shared_ptr<FrameItf> frame){

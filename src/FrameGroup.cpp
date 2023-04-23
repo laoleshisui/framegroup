@@ -77,11 +77,10 @@ void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
     frame_objects_[remote_id]->AddSink(render);
 }
 
-void FrameGroup::InitFrameObjects(){
+void FrameGroup::InitCapturedFrameObjects(){
     //TODO fill frame_objects_ & captured_objects_id_ & uncaptured_objects_id_
     //Maybe from server data
     for(CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::value_type& i : frame_objects_){
-        i.second->id_ = i.first;
         i.second->SendPacket = std::bind(&FrameGroup::SendPacket, this, i.first, std::placeholders::_1);
     }
 }
@@ -148,12 +147,13 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             for(const uint64_t& remote_id : registered_objects.ids()){
                 std::lock_guard<std::mutex> lock(objects_id_mutex_);
                 frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                frame_objects_[remote_id]->id_ = remote_id;
                 captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
                 if(OnUpdateId){
                     OnUpdateId(1, remote_id);
                 }
             }
-            InitFrameObjects();
+            InitCapturedFrameObjects();
         }
         else if(event.code() == pframe::EventCode::UNREGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
@@ -162,6 +162,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             for(const uint64_t& uncaptured_id : registered_objects.ids()){
                 std::lock_guard<std::mutex> lock(objects_id_mutex_);
                 frame_objects_[uncaptured_id] = std::make_unique<FrameObject>();
+                frame_objects_[uncaptured_id]->id_ = uncaptured_id;
                 uncaptured_objects_id_.insert(uncaptured_id);//atfer FrameObject being created!
                 if(OnUpdateId){
                     OnUpdateId(0, uncaptured_id);
@@ -191,12 +192,16 @@ void FrameGroup::EffectCaculate(uint64_t object_id){
     std::shared_lock<std::shared_mutex> lock_object_id(frame_objects_[object_id]->frames_mutex_);
 
     if(captured_objects_id_.contains(object_id)){
+        std::shared_ptr<FrameItf>& decider_frame = frame_objects_[object_id]->local_frames_.back();
+        if(decider_frame->processes_.empty()){
+            return;
+        }
         // local frame added
         for(const CORE_SET<uint64_t>::value_type& id : uncaptured_objects_id_){
             std::shared_lock<std::shared_mutex> lock_i(frame_objects_[id]->frames_mutex_);
             //ensure other has frames
             if(frame_objects_[id]->remote_frames_.size() > 0){
-                ReviseEffect(frame_objects_[object_id].get(), frame_objects_[object_id]->local_frames_.back().get(), frame_objects_[id].get(), frame_objects_[id]->remote_frames_.back().get());
+                ReviseEffect(frame_objects_[object_id].get(), decider_frame.get(), frame_objects_[id].get(), frame_objects_[id]->remote_frames_.back().get());
             }
         }
     }else if(uncaptured_objects_id_.contains(object_id)){
@@ -209,7 +214,7 @@ void FrameGroup::EffectCaculate(uint64_t object_id){
             for (std::vector<std::shared_ptr<FrameItf>>::reverse_iterator it = captured_local_frames.rbegin();
                 it != captured_local_frames.rend();
                 it++){
-                if((*it)->idx_ == last_frame->idx_){
+                if((*it)->idx_ == last_frame->idx_ && !(*it)->processes_.empty()){
                     ReviseEffect(frame_objects_[id].get(), it->get(),
                         frame_objects_[object_id].get(), last_frame.get());
                 }
@@ -234,60 +239,19 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
         CORE_SET<uint64_t>& effected_ids = decider->effected_map_[decider_frame->idx_];
         if(effected_ids.contains(other->id_)){
             return;
-        }else{
-            effected_ids.insert(other->id_);
         }
-    }
 
-    //effect now!
-    //Attach effect in the nearest Frame
-    if(OnEffect){
-        for(Process& i : decider_frame->processes_){
-            for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
-                OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
+        //effect now!
+        //Attach effect in the nearest Frame
+        if(OnEffect){
+            for(Process& i : decider_frame->processes_){
+                for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
+                    bool ret = OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
+                    if(ret){
+                        effected_ids.insert(other->id_);
+                    }
+                }
             }
         }
     }
-
-#if 0
-    for(Operation& op : decider_frame->operations_){
-        if(op.type_ == pframe::RANGE_DAMAGE){
-            /**
-             * args:
-             * 1: float range
-             * 2: int64_t damage
-            */
-            float range = std::stof(op.args_[0]);
-            int64_t damage = std::stol(op.args_[1]);
-
-            float distance = Position::Distance(decider_frame->position_, other_frame->position_);
-            if(distance <= range){
-                Operation effect;
-                effect.type_ = pframe::DAMAGED;
-                effect.args_ = {std::to_string(other->id_), std::to_string(damage)};
-                
-                frame_capturers_[decider->id_]->AddOperation(std::move(effect));
-                //TODO predict the effected object's ui.
-                //Only relay/p2p the effect to the effected object by P frame or multicast it to all?
-            }
-        }
-        else if(op.type_ == pframe::DAMAGED){
-            /**
-             * args:
-             * 1: uint64_t id
-             * 2: int32_t damage
-            */
-            uint64_t id = std::stoul(op.args_[0]);
-            int32_t damage = std::stol(op.args_[1]);
-
-            if(id == decider->id_){
-                // Decrease health
-                frame_capturers_[decider->id_]->AddDeltaHealth(damage);
-                
-                // TODO Judge whether die
-                // decider_frame->health <= damage; 
-            }
-        }
-    }
-#endif
 }

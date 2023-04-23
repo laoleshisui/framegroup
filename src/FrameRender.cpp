@@ -9,7 +9,6 @@ OnProcess(nullptr)
 FrameRender::~FrameRender(){}
 
 void FrameRender::Render(std::shared_ptr<FrameItf> frame){
-    std::cout << frame->idx_ << " "<< frame->states_["POSITION"][0]<< " " << frame->states_["POSITION"][1]<<std::endl;
     if(OnState){
         for(CORE_MAP<std::string, std::vector<std::string>>::value_type& i : frame->states_){
             OnState(i.first, i.second);

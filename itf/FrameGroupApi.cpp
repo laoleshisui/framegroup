@@ -47,7 +47,7 @@ void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
 }
 void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){
+    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values)->bool{
         std::vector<const char*> jargs;
         for(int i = 0; i < args.size(); ++i){
             jargs.push_back(args[i].c_str());
@@ -56,7 +56,7 @@ void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
         for(int i = 0; i < values.size(); ++i){
             jvalues.push_back(values[i].c_str());
         }
-        cb(decider_remote_id, process_type.c_str(), jargs.data(), jargs.size(), other_remote_id, state_type.c_str(), jvalues.data(), jvalues.size());
+        return cb(decider_remote_id, process_type.c_str(), jargs.data(), jargs.size(), other_remote_id, state_type.c_str(), jvalues.data(), jvalues.size());
     };
     frame_group->OnEffect = std::move(jcb);
 }

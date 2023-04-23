@@ -14,7 +14,7 @@ extern "C"{
 
 typedef void(*FrameGroup_OnLogin)(int code, int id);
 typedef void(*FrameGroup_OnUpdateId)(int captured, uint64_t remote_id);
-typedef void(*FrameGroup_OnEffect)(uint64_t decider_remote_id, const char* process_type, const char** args, uint64_t other_remote_id, int args_rows, const char* state_type, const char** values, int values_rows);
+typedef int(*FrameGroup_OnEffect)(uint64_t decider_remote_id, const char* process_type, const char** args, uint64_t other_remote_id, int args_rows, const char* state_type, const char** values, int values_rows);
 typedef void (*FrameRender_OnState)(const char* type, const char** values, int rows);
 typedef void (*FrameRender_OnProcess)(const char* type, const char** args, int rows);
 

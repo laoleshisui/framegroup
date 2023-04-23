@@ -50,9 +50,11 @@ public:
         }
     }
     void ParseFrom(const pframe::FrameData& pframe){
+        states_.clear();
+        processes_.clear();
+
         idx_ = pframe.idx();
         for(const pframe::State& i : pframe.states()){
-            states_[i.type()].clear();
             for(const std::string& value : i.values()){
                 states_[i.type()].push_back(value);
             }

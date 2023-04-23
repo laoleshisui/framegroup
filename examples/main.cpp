@@ -61,7 +61,7 @@ void thread_capture_01(){
     values[1] = "100";
     FrameCapturer_SetState(frame_capturer_01, "POSITION" , values, 2);
     while(true){
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         // FrameCapturer_MoveTo(frame_capturer_01, ++x, ++y);
         FrameCapturer_Capture(frame_capturer_01);
     }
@@ -73,7 +73,7 @@ void thread_capture_02(){
     values[1] = "200";
     FrameCapturer_SetState(frame_capturer_02, "POSITION" , values, 2);
     while(true){
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         // FrameCapturer_MoveTo(frame_capturer_02, ++x, ++y);
         FrameCapturer_Capture(frame_capturer_02);
     }
