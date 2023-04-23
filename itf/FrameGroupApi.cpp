@@ -47,7 +47,7 @@ void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
 }
 void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, pframe::ProcessType process_type, std::vector<std::string>& args, uint64_t other_remote_id, pframe::StateType state_type, std::vector<std::string>& values){
+    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){
         std::vector<const char*> jargs;
         for(int i = 0; i < args.size(); ++i){
             jargs.push_back(args[i].c_str());
@@ -56,7 +56,7 @@ void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
         for(int i = 0; i < values.size(); ++i){
             jvalues.push_back(values[i].c_str());
         }
-        cb(decider_remote_id, (uint32_t)process_type, jargs.data(), jargs.size(), other_remote_id, (uint32_t)state_type, jvalues.data(), jvalues.size());
+        cb(decider_remote_id, process_type.c_str(), jargs.data(), jargs.size(), other_remote_id, state_type.c_str(), jvalues.data(), jvalues.size());
     };
     frame_group->OnEffect = std::move(jcb);
 }
@@ -67,21 +67,21 @@ void FrameCapturer_Capture(void* capturer){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     frame_capturer->Capture();
 }
-void FrameCapturer_SetState(void* capturer, uint32_t type, char** values, uint32_t rows){
+void FrameCapturer_SetState(void* capturer, char* type, char** values, uint32_t rows){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     std::vector<std::string> jvalues;
     for(int i = 0; i < rows; ++i){
         jvalues.push_back(std::string(values[i]));
     }
-    frame_capturer->SetState(pframe::StateType(type), std::move(jvalues));
+    frame_capturer->SetState(std::string(type), std::move(jvalues));
 }
-void FrameCapturer_AddProcess(void* capturer, uint32_t type, char** args, uint32_t rows){
+void FrameCapturer_AddProcess(void* capturer, char* type, char** args, uint32_t rows){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     std::vector<std::string> jargs;
     for(int i = 0; i < rows; ++i){
         jargs.push_back(std::string(args[i]));
     }
-    frame_capturer->AddProcess(pframe::ProcessType(type), std::move(jargs));
+    frame_capturer->AddProcess(std::string(type), std::move(jargs));
 }
 
 void* CreateFrameRender(){
@@ -89,23 +89,23 @@ void* CreateFrameRender(){
 }
 void FrameRender_SetCallBack_OnState(void* render, FrameRender_OnState cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    std::function<framegroup::FrameRender::OnState_FUNC> jcb = [=](const pframe::StateType& type, const std::vector<std::string>& values){
+    std::function<framegroup::FrameRender::OnState_FUNC> jcb = [=](const std::string& type, const std::vector<std::string>& values){
         std::vector<const char*> jvalues;
         for(int i = 0; i < values.size(); ++i){
             jvalues.push_back(values[i].c_str());
         }
-        cb((uint32_t)type, jvalues.data(), jvalues.size());
+        cb(type.c_str(), jvalues.data(), jvalues.size());
     };
     frame_render->OnState = std::move(jcb);
 }
 void FrameRender_SetCallBack_OnProcess(void* render, FrameRender_OnProcess cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
-    std::function<framegroup::FrameRender::OnProcess_FUNC> jcb = [=](const pframe::ProcessType& type, const std::vector<std::string>& args){
+    std::function<framegroup::FrameRender::OnProcess_FUNC> jcb = [=](const std::string& type, const std::vector<std::string>& args){
         std::vector<const char*> jargs;
         for(int i = 0; i < args.size(); ++i){
             jargs.push_back(args[i].c_str());
         }
-        cb((uint32_t)type, jargs.data(), jargs.size());
+        cb(type.c_str(), jargs.data(), jargs.size());
     };
     frame_render->OnProcess = std::move(jcb);
 }

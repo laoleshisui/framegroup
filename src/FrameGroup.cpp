@@ -243,7 +243,7 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
     //Attach effect in the nearest Frame
     if(OnEffect){
         for(Process& i : decider_frame->processes_){
-            for(CORE_MAP<StateType, std::vector<std::string>>::value_type& j : other_frame->states_){
+            for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
                 OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
             }
         }

@@ -21,8 +21,8 @@ public:
 
     void Capture();
 
-    void SetState(pframe::StateType type, std::vector<std::string> values);
-    void AddProcess(pframe::ProcessType type, std::vector<std::string> args);
+    void SetState(std::string type, std::vector<std::string> values);
+    void AddProcess(std::string type, std::vector<std::string> args);
 
 
     void AttachTimeController(FrameTimeController* time_controller);

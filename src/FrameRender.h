@@ -11,8 +11,8 @@ namespace framegroup{
 class FrameRender : public FrameSinkItf
 {
 public:
-    typedef void (OnState_FUNC)(const pframe::StateType& type, const std::vector<std::string>& values);
-    typedef void (OnProcess_FUNC)(const pframe::ProcessType& type, const std::vector<std::string>& args);
+    typedef void (OnState_FUNC)(const std::string& type, const std::vector<std::string>& values);
+    typedef void (OnProcess_FUNC)(const std::string& type, const std::vector<std::string>& args);
 
     FrameRender();
     ~FrameRender();
