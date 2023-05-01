@@ -22,14 +22,6 @@ std::mutex mutex;
 std::unique_lock<std::mutex> ul(mutex);
 std::condition_variable cv;
 
-
-void cb_FrameGroup_OnLogin_01(int code, int id){
-    cv.notify_all();
-}
-void cb_FrameGroup_OnLogin_02(int code, int id){
-    cv.notify_all();
-}
-
 void cb_FrameGroup_OnUpdateId_01(int captured, uint64_t remote_id){
     std::cout << "cb_FrameGroup_OnUpdateId_01:" << captured << " " << remote_id << std::endl;
     if(captured){
@@ -81,6 +73,28 @@ void thread_capture_02(){
 }
 
 
+void cb_FrameGroup_OnLogin_01(int code, int id){
+    std::cout << "cb_FrameGroup_OnLogin_01:" << code << " " << id << std::endl;
+
+    FrameGroup_EnterRoom(frame_group_01,1);
+    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    FrameGroup_AddCaptureredObjects(frame_group_01, 1);
+
+    std::thread capturer_thread_01(thread_capture_01);
+    capturer_thread_01.detach();
+}
+void cb_FrameGroup_OnLogin_02(int code, int id){
+    std::cout << "cb_FrameGroup_OnLogin_02:" << code << " " << id << std::endl;
+
+    FrameGroup_EnterRoom(frame_group_02, 1);
+    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    FrameGroup_AddCaptureredObjects(frame_group_02, 1);
+
+    std::thread capturer_thread_02(thread_capture_02);
+    capturer_thread_02.detach();
+}
+
+
 int main(){
     //01
     frame_group_01 = CreateFrameGroup();
@@ -90,39 +104,20 @@ int main(){
 
     FrameGroup_Connect(frame_group_01, "127.0.0.1", 10002);
     FrameGroup_SetCallBack_OnLogin(frame_group_01, cb_FrameGroup_OnLogin_01);
-    FrameGroup_Login(frame_group_01);
-    cv.wait(ul);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     FrameGroup_SetCallBack_OnUpdateId(frame_group_01, cb_FrameGroup_OnUpdateId_01);
-
-    FrameGroup_EnterRoom(frame_group_01,1);
+    FrameGroup_Login(frame_group_01);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    FrameGroup_AddCaptureredObjects(frame_group_01, 1);
-
-    std::thread capturer_thread_01(thread_capture_01);
-    capturer_thread_01.detach();
 
     //02
     frame_group_02 = CreateFrameGroup();
     frame_capturer_02 = CreateFrameCapturer();
     frame_render_02 = CreateFrameRender();
     FrameRender_SetCallBack_OnState(frame_render_02, cb_OnState_02);
+    FrameGroup_SetCallBack_OnUpdateId(frame_group_02, cb_FrameGroup_OnUpdateId_02);
 
     FrameGroup_Connect(frame_group_02, "127.0.0.1", 10002);
     FrameGroup_SetCallBack_OnLogin(frame_group_02, cb_FrameGroup_OnLogin_02);
     FrameGroup_Login(frame_group_02);
-    cv.wait(ul);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    FrameGroup_SetCallBack_OnUpdateId(frame_group_02, cb_FrameGroup_OnUpdateId_02);
-
-    FrameGroup_EnterRoom(frame_group_02, 1);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    FrameGroup_AddCaptureredObjects(frame_group_02, 1);
-
-    std::thread capturer_thread_02(thread_capture_02);
-    capturer_thread_02.detach();
 
     cv.wait(ul);
 }

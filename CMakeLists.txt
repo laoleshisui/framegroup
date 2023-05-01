@@ -93,7 +93,7 @@ SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i
 SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i 
   PROPERTIES OUTFILE_DIR ${CMAKE_SOURCE_DIR}/itf/swig/)
 swig_add_library(${PROJECT_NAME}_api
-  TYPE STATIC 
+  TYPE SHARED 
   LANGUAGE csharp
   OUTPUT_DIR ${CMAKE_SOURCE_DIR}/itf/csharp/ 
   SOURCES ${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i)
