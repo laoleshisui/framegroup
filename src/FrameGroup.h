@@ -45,9 +45,11 @@ public:
     void AddCaptureredObjects(int num_of_objects);
     void AddCapturer(uint64_t remote_id, FrameCapturer* capturer);
     void AddRender(uint64_t remote_id, FrameRender* render);
-    std::function<OnUpdateId_FUNC> OnUpdateId;
-    std::function<OnLogin_FUNC> OnLogin;
-    std::function<OnEffect_FUNC> OnEffect;
+
+    // Set these cbs before connection to ensure thread-safe
+    void SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb);
+    void SetCallBackOnLogin(std::function<OnLogin_FUNC> cb);
+    void SetCallBackOnEffect(std::function<OnEffect_FUNC> cb);
 private:
     uint64_t id_;
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
@@ -62,6 +64,10 @@ private:
     
     acore::Client client_;
     std::thread client_loop_;
+
+    std::function<OnUpdateId_FUNC> OnUpdateId;
+    std::function<OnLogin_FUNC> OnLogin;
+    std::function<OnEffect_FUNC> OnEffect;
 
     // All data is received, will start soon;
     // Maybe a signal from server to start.

@@ -2,6 +2,7 @@
 #define FRAMERENDER_H
 
 #include <memory>
+#include <shared_mutex>
 #include "FrameSinkItf.h"
 
 namespace framegroup{
@@ -20,9 +21,13 @@ public:
     virtual void Render(std::shared_ptr<FrameItf> frame);
     virtual void OnFrame(std::shared_ptr<FrameItf> frame) override;
 
+
+    void SetCallBackOnState(std::function<OnState_FUNC> cb);
+    void SetCallBackOnProcess(std::function<OnProcess_FUNC> cb);
+private:
+    std::shared_mutex cb_mutex_;
     std::function<OnState_FUNC> OnState;
     std::function<OnProcess_FUNC> OnProcess;
-private:
 };
 
 }

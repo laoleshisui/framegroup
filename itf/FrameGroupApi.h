@@ -31,7 +31,6 @@ extern void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId
 extern void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb);
 
 extern void* CreateFrameCapturer();
-extern void FrameCapturer_Capture(void* capturer);
 extern void FrameCapturer_SetState(void* capturer, char* type, char** values, uint32_t rows);
 extern void FrameCapturer_AddProcess(void* capturer, char* type, char** args, uint32_t rows);
 

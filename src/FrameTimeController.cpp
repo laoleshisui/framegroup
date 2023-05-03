@@ -12,8 +12,10 @@ using namespace framegroup;
 FrameTimeController::FrameTimeController()
 :delay_ms_(32),
 first_frame_time_(0),
-first_frame_idx_(0)
+first_frame_idx_(0),
+timer_(std::make_unique<acore::Timer>(delay_ms_, std::bind(&FrameTimeController::Run, this)))
 {
+    timer_->Start();
 }
 
 void FrameTimeController::SetFPS(int fps){
@@ -55,4 +57,16 @@ bool FrameTimeController::UpdateFrameIdx(uint64_t& frame_idx){
 void FrameTimeController::Tune(int32_t num_of_frame){
     std::lock_guard<std::mutex> lg(mutex_);
     first_frame_idx_ += num_of_frame * delay_ms_;
+}
+
+void FrameTimeController::Run(){
+    std::shared_lock<std::shared_mutex> sl(timer_mutex_);
+    for(std::function<void()>& runnable : runnables_){
+        runnable();
+    }
+}
+
+void FrameTimeController::AddRunable(std::function<void()> runnable){
+    std::unique_lock<std::shared_mutex> ul(timer_mutex_);
+    runnables_.push_back(runnable);
 }

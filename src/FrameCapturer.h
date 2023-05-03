@@ -19,8 +19,6 @@ public:
     FrameCapturer();
     ~FrameCapturer();
 
-    void Capture();
-
     void SetState(std::string type, std::vector<std::string> values);
     void AddProcess(std::string type, std::vector<std::string> args);
 
@@ -35,6 +33,9 @@ private:
     acore::TaskPool send_task_pool_;
 
     std::unique_ptr<FrameItf> frame_;
+    bool has_update_;
+
+    void Capture();
 };
 
 }

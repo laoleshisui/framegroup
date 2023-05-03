@@ -9,7 +9,8 @@ using namespace framegroup;
 
 FrameGroup::FrameGroup()
 :id_(0),
-time_controller_(std::make_unique<FrameTimeController>())
+time_controller_(std::make_unique<FrameTimeController>()),
+client_(6)
 {
     
     acore::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -254,4 +255,14 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
             }
         }
     }
+}
+
+void FrameGroup::SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb){
+    OnUpdateId = cb;
+}
+void FrameGroup::SetCallBackOnLogin(std::function<OnLogin_FUNC> cb){
+    OnLogin = cb;
+}
+void FrameGroup::SetCallBackOnEffect(std::function<OnEffect_FUNC> cb){
+    OnEffect = cb;
 }

@@ -45,29 +45,37 @@ void cb_OnState_01(const char* type, const char** values, int rows){
 void cb_OnState_02(const char* type, const char** values, int rows){
     // std::cout<<"cb_OnState_02:" << type << values[0] << std::endl;
 }
+void cb_OnProcess_01(const char* type, const char** values, int rows){
+    std::cout<<"cb_OnProcess_01:" << type << " " << values[0] << std::endl;
+}
+void cb_OnProcess_02(const char* type, const char** values, int rows){
+    std::cout<<"cb_OnProcess_02:" << type << " " << values[0] << std::endl;
+}
 
 void thread_capture_01(){
     static float x = 0, y = 0;
     static char* values[10];
-    values[0] = "100";
-    values[1] = "100";
-    FrameCapturer_SetState(frame_capturer_01, "POSITION" , values, 2);
+    return;
     while(true){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        // FrameCapturer_MoveTo(frame_capturer_01, ++x, ++y);
-        FrameCapturer_Capture(frame_capturer_01);
+        values[0] = (char*)std::to_string(x).c_str();
+        values[1] = (char*)std::to_string(y).c_str();
+        x += 1.f;
+        y += 1.f;
+        FrameCapturer_SetState(frame_capturer_01, "POSITION" , values, 2);
     }
 }
 void thread_capture_02(){
     static float x = 1, y = 1;
     static char* values[10];
-    values[0] = "200";
-    values[1] = "200";
-    FrameCapturer_SetState(frame_capturer_02, "POSITION" , values, 2);
+    int attack = 1;
+    // return;
     while(true){
+        values[0] = (char*)std::to_string(attack).c_str();
+        // values[1] = (char*)std::to_string(y).c_str();
+        // x += 0.1f;
+        // y += 0.1f;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        // FrameCapturer_MoveTo(frame_capturer_02, ++x, ++y);
-        FrameCapturer_Capture(frame_capturer_02);
+        FrameCapturer_AddProcess(frame_capturer_02, "Attack" , values, 1);
     }
 
 }
@@ -101,6 +109,7 @@ int main(){
     frame_capturer_01 = CreateFrameCapturer();
     frame_render_01 = CreateFrameRender();
     FrameRender_SetCallBack_OnState(frame_render_01, cb_OnState_01);
+    FrameRender_SetCallBack_OnProcess(frame_render_01, cb_OnProcess_01);
 
     FrameGroup_Connect(frame_group_01, "127.0.0.1", 10002);
     FrameGroup_SetCallBack_OnLogin(frame_group_01, cb_FrameGroup_OnLogin_01);
@@ -113,6 +122,7 @@ int main(){
     frame_capturer_02 = CreateFrameCapturer();
     frame_render_02 = CreateFrameRender();
     FrameRender_SetCallBack_OnState(frame_render_02, cb_OnState_02);
+    FrameRender_SetCallBack_OnProcess(frame_render_02, cb_OnProcess_02);
     FrameGroup_SetCallBack_OnUpdateId(frame_group_02, cb_FrameGroup_OnUpdateId_02);
 
     FrameGroup_Connect(frame_group_02, "127.0.0.1", 10002);

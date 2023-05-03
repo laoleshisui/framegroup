@@ -39,11 +39,11 @@ void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render){
 }
 void FrameGroup_SetCallBack_OnLogin(void* group, FrameGroup_OnLogin cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->OnLogin = std::move(cb);
+    frame_group->SetCallBackOnLogin(std::move(cb));
 }
 void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->OnUpdateId = std::move(cb);
+    frame_group->SetCallBackOnUpdateId(std::move(cb));
 }
 void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
@@ -58,14 +58,10 @@ void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
         }
         return cb(decider_remote_id, process_type.c_str(), jargs.data(), jargs.size(), other_remote_id, state_type.c_str(), jvalues.data(), jvalues.size());
     };
-    frame_group->OnEffect = std::move(jcb);
+    frame_group->SetCallBackOnEffect(std::move(jcb));
 }
 void* CreateFrameCapturer(){
     return new framegroup::FrameCapturer();
-}
-void FrameCapturer_Capture(void* capturer){
-    framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    frame_capturer->Capture();
 }
 void FrameCapturer_SetState(void* capturer, char* type, char** values, uint32_t rows){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
@@ -96,7 +92,7 @@ void FrameRender_SetCallBack_OnState(void* render, FrameRender_OnState cb){
         }
         cb(type.c_str(), jvalues.data(), jvalues.size());
     };
-    frame_render->OnState = std::move(jcb);
+    frame_render->SetCallBackOnState(std::move(jcb));
 }
 void FrameRender_SetCallBack_OnProcess(void* render, FrameRender_OnProcess cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
@@ -107,5 +103,5 @@ void FrameRender_SetCallBack_OnProcess(void* render, FrameRender_OnProcess cb){
         }
         cb(type.c_str(), jargs.data(), jargs.size());
     };
-    frame_render->OnProcess = std::move(jcb);
+    frame_render->SetCallBackOnProcess(std::move(jcb));
 }

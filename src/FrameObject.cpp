@@ -38,7 +38,7 @@ void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
     // send to render
     SendFrame(frame);
 
-    std::cout << id_ << ": " << frame->idx_ << " "<< frame->states_["POSITION"][0]<< " " << frame->states_["POSITION"][1]<<std::endl;
+    // std::cout << id_ << ": " << frame->idx_ << " "<< frame->states_["POSITION"][0]<< " " << frame->states_["POSITION"][1]<<std::endl;
 }
 
 void FrameObject::SendFrame(std::shared_ptr<FrameItf> frame){

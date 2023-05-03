@@ -8,6 +8,9 @@
 
 #include <cstdint>
 #include <mutex>
+#include <shared_mutex>
+
+#include <acore/utils/TaskPool.h>
 
 namespace framegroup{
 class FrameTimeController
@@ -28,12 +31,19 @@ public:
      */
     void Tune(int32_t num_of_frame);
 
+    void AddRunable(std::function<void()> runnable);
 private:
     std::mutex mutex_;
     uint64_t delay_ms_;
     //TODO tuning latency between cs frame by tuning first_frame_time_
     uint64_t first_frame_time_;
     uint64_t first_frame_idx_;
+
+    //A Util Timer, nothing with above
+    std::shared_mutex timer_mutex_;
+    std::unique_ptr<acore::Timer> timer_;
+    std::vector<std::function<void()>> runnables_;
+    void Run();
 };
 
 }

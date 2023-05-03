@@ -8,13 +8,17 @@ acore::Recycler<acore::Task> FrameCapturer::available_tasks_ = acore::Recycler<a
 FrameCapturer::FrameCapturer()
 :time_controller_(nullptr),
 send_task_pool_(1),
-frame_(std::make_unique<FrameItf>())
+frame_(std::make_unique<FrameItf>()),
+has_update_(false)
 {
 }
 FrameCapturer::~FrameCapturer(){}
 
 void FrameCapturer::Capture(){
     std::lock_guard<std::mutex> lg(frame_mutex_);
+    if(!has_update_){
+        return;
+    }
 
     if(!time_controller_ || !time_controller_->UpdateFrameIdx(frame_->idx_)){
         return;
@@ -32,21 +36,27 @@ void FrameCapturer::Capture(){
         }
     };
     send_task_pool_.PostTask((*task));
+
+    has_update_ = false;
 }
 
 
 void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
     time_controller_ = time_controller;
+    time_controller_->AddRunable(std::bind(&FrameCapturer::Capture, this));
 }
 
 
 void FrameCapturer::SetState(std::string type, std::vector<std::string> values){
     std::lock_guard<std::mutex> lg(frame_mutex_);
     frame_->states_[type] = std::move(values);
+    has_update_ = true;
 }
 void FrameCapturer::AddProcess(std::string type, std::vector<std::string> args){
     std::lock_guard<std::mutex> lg(frame_mutex_);
     frame_->processes_.emplace_back();
     frame_->processes_.back().type_ = std::move(type);
     frame_->processes_.back().args_ = std::move(args);
+
+    has_update_ = true;
 }
