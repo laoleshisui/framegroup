@@ -74,7 +74,7 @@ void thread_capture_02(){
         // values[1] = (char*)std::to_string(y).c_str();
         // x += 0.1f;
         // y += 0.1f;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(15));
         FrameCapturer_AddProcess(frame_capturer_02, "Attack" , values, 1);
     }
 

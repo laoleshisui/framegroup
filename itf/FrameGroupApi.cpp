@@ -47,7 +47,7 @@ void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
 }
 void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values)->bool{
+    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values)->int{
         std::vector<const char*> jargs;
         for(int i = 0; i < args.size(); ++i){
             jargs.push_back(args[i].c_str());

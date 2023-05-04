@@ -32,7 +32,7 @@ class FrameGroup
 public:
     typedef void(OnLogin_FUNC)(int code, int id);
     typedef void(OnUpdateId_FUNC)(int captured, uint64_t remote_id);
-    typedef bool(OnEffect_FUNC)(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
+    typedef int(OnEffect_FUNC)(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
 
     FrameGroup();
     ~FrameGroup();

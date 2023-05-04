@@ -247,7 +247,7 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
         if(OnEffect){
             for(Process& i : decider_frame->processes_){
                 for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
-                    bool ret = OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
+                    int ret = OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
                     if(ret){
                         effected_ids.insert(other->id_);
                     }
