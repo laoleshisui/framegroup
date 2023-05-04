@@ -63,8 +63,6 @@ private:
     std::function<void(std::shared_ptr<PacketItf>)> SendPacket;
     // Send to Render
     void SendFrame(std::shared_ptr<FrameItf> frame);
-    // save packet to file
-    std::function<void(std::shared_ptr<FrameItf>)> SaveFrame;
 };
 
 

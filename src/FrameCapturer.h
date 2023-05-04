@@ -22,6 +22,7 @@ public:
     void SetState(std::string type, std::vector<std::string> values);
     void AddProcess(std::string type, std::vector<std::string> args);
 
+    void SendIFrame();
 
     void AttachTimeController(FrameTimeController* time_controller);
 

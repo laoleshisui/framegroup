@@ -113,21 +113,22 @@ void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packe
 
     packet->ToProto(frame);
     client_.Send(client_.client_bev_, frame.SerializeAsString());
+    SaveFrame(object_id, packet);
     EffectCaculate(object_id);
 }
 
-void FrameGroup::SaveFrame(std::shared_ptr<FrameItf> frame){
+void FrameGroup::SaveFrame(uint64_t object_id, std::shared_ptr<PacketItf> packet){
     if(!save_frame_file_) return;
 
     std::shared_ptr<acore::Task> task = std::make_shared<acore::Task>();
     task->run_ = [=](){
         // encode frame to packet then save with a lenth head
-        pframe::FrameData pframe_data;
-        frame->ToProto(pframe_data);
-        std::string data = pframe_data.SerializeAsString();
-        uint16_t size = data.size();
-        fwrite(&size, sizeof(uint16_t), 1, save_frame_file_);
-        fwrite(data.data(), size, 1, save_frame_file_);
+        std::string& data = packet->data_;
+        uint64_t id = object_id;
+        uint16_t data_size = sizeof(uint64_t) + data.size();
+        fwrite(&data_size, sizeof(data_size), 1, save_frame_file_);
+        fwrite(&id, sizeof(id), 1, save_frame_file_);
+        fwrite(data.data(), data.size(), 1, save_frame_file_);
     };
     save_frame_file_task_pool_.PostTask(task);
 }
@@ -155,8 +156,9 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             // to PacketItf
             packet->ParseFrom(frame);
             it->second->OnPacket(packet);
+            SaveFrame(object_id, packet);
+            EffectCaculate(object_id);
         }
-        EffectCaculate(object_id);
     }
     else if(relay.proto_type() == pframe::ProtoType::EVENT){
         pframe::Event event;

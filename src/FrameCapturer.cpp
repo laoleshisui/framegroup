@@ -37,6 +37,9 @@ void FrameCapturer::Capture(){
     };
     send_task_pool_.PostTask((*task));
 
+    if(frame_->type_ == pframe::Frametype::I){
+        frame_->type_ = pframe::Frametype::P;
+    }
     has_update_ = false;
 }
 
@@ -50,7 +53,6 @@ void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
 void FrameCapturer::SetState(std::string type, std::vector<std::string> values){
     std::lock_guard<std::mutex> lg(frame_mutex_);
     frame_->states_[type] = std::move(values);
-    has_update_ = true;
 }
 void FrameCapturer::AddProcess(std::string type, std::vector<std::string> args){
     std::lock_guard<std::mutex> lg(frame_mutex_);
@@ -58,5 +60,11 @@ void FrameCapturer::AddProcess(std::string type, std::vector<std::string> args){
     frame_->processes_.back().type_ = std::move(type);
     frame_->processes_.back().args_ = std::move(args);
 
+    has_update_ = true;
+}
+
+void FrameCapturer::SendIFrame(){
+    std::lock_guard<std::mutex> lg(frame_mutex_);
+    frame_->type_ = pframe::Frametype::I;
     has_update_ = true;
 }

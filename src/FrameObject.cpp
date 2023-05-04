@@ -7,8 +7,7 @@ FrameObject::FrameObject()
 max_frame_queue_size_(1),
 encoder_(std::make_unique<FrameEncoder>()),
 decoder_(std::make_unique<FrameDecoder>()),
-SendPacket(nullptr),
-SaveFrame(nullptr)
+SendPacket(nullptr)
 {}
 
 FrameObject::~FrameObject(){}
@@ -18,18 +17,13 @@ void FrameObject::AddFrame(bool is_local, std::shared_ptr<FrameItf> frame){
     if(!is_local){
         target_queue = &remote_frames_;
     }
-    std::shared_ptr<FrameItf> frame_to_save = nullptr;
     {
         std::unique_lock<std::shared_mutex> lock(frames_mutex_);
         target_queue->push_back(frame);
 
         if(target_queue->size() > max_frame_queue_size_){
-            frame_to_save = target_queue->front();
             target_queue->pop_front();
         }
-    }
-    if(frame_to_save && SaveFrame){
-        SaveFrame(frame_to_save);
     }
 }
 

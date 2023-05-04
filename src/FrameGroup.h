@@ -84,7 +84,7 @@ private:
     // Send to Server
     void SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packet);
 
-    void SaveFrame(std::shared_ptr<FrameItf> frame);
+    void SaveFrame(uint64_t object_id, std::shared_ptr<PacketItf> frame);
 
     //decider is always the captured, and other is always the uncaptured.
     void ReviseEffect(FrameObject* decider, FrameItf* decider_frame, FrameObject* other, FrameItf* other_frame);
