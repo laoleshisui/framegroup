@@ -23,6 +23,10 @@ void FrameGroup_ExitRoom(void* group, uint64_t room_id){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->ExitRoom(room_id);
 }
+void FrameGroup_SetSaveFrameFilePath(void* group, char* file_path){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    frame_group->SetSaveFrameFilePath(std::string(file_path));
+}
 void FrameGroup_AddCapturer(void* group, uint64_t local_id, void* capturer){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;

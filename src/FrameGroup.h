@@ -41,6 +41,8 @@ public:
     void Login();
     void EnterRoom(uint64_t room_id = 0);
     void ExitRoom(uint64_t room_id = 0);
+    
+    void SetSaveFrameFilePath(std::string file_path);
 
     void AddCaptureredObjects(int num_of_objects);
     void AddCapturer(uint64_t remote_id, FrameCapturer* capturer);
@@ -69,6 +71,9 @@ private:
     std::function<OnLogin_FUNC> OnLogin;
     std::function<OnEffect_FUNC> OnEffect;
 
+    acore::TaskPool save_frame_file_task_pool_;
+    FILE* save_frame_file_;
+
     // All data is received, will start soon;
     // Maybe a signal from server to start.
     void InitCapturedFrameObjects();
@@ -78,6 +83,8 @@ private:
 
     // Send to Server
     void SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packet);
+
+    void SaveFrame(std::shared_ptr<FrameItf> frame);
 
     //decider is always the captured, and other is always the uncaptured.
     void ReviseEffect(FrameObject* decider, FrameItf* decider_frame, FrameObject* other, FrameItf* other_frame);

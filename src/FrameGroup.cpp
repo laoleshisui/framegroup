@@ -10,7 +10,12 @@ using namespace framegroup;
 FrameGroup::FrameGroup()
 :id_(0),
 time_controller_(std::make_unique<FrameTimeController>()),
-client_(6)
+client_(6),
+OnUpdateId(nullptr),
+OnLogin(nullptr),
+OnEffect(nullptr),
+save_frame_file_task_pool_(1),
+save_frame_file_(NULL)
 {
     
     acore::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -21,6 +26,10 @@ client_(6)
 
 FrameGroup::~FrameGroup()
 {
+    if(save_frame_file_){
+        fflush(save_frame_file_);
+        fclose(save_frame_file_);
+    }
 }
 
 void FrameGroup::Connect(std::string ip, int port){
@@ -52,6 +61,10 @@ void FrameGroup::ExitRoom(uint64_t room_id){
     exit_room.set_room_id(room_id);
     
     client_.Send(client_.client_bev_, exit_room.SerializeAsString());
+}
+
+void FrameGroup::SetSaveFrameFilePath(std::string file_path){
+    save_frame_file_ = fopen(file_path.c_str(), "wb+");
 }
 
 void FrameGroup::AddCaptureredObjects(int num_of_objects){
@@ -101,6 +114,22 @@ void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packe
     packet->ToProto(frame);
     client_.Send(client_.client_bev_, frame.SerializeAsString());
     EffectCaculate(object_id);
+}
+
+void FrameGroup::SaveFrame(std::shared_ptr<FrameItf> frame){
+    if(!save_frame_file_) return;
+
+    std::shared_ptr<acore::Task> task = std::make_shared<acore::Task>();
+    task->run_ = [=](){
+        // encode frame to packet then save with a lenth head
+        pframe::FrameData pframe_data;
+        frame->ToProto(pframe_data);
+        std::string data = pframe_data.SerializeAsString();
+        uint16_t size = data.size();
+        fwrite(&size, sizeof(uint16_t), 1, save_frame_file_);
+        fwrite(data.data(), size, 1, save_frame_file_);
+    };
+    save_frame_file_task_pool_.PostTask(task);
 }
 
 void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len){
@@ -211,8 +240,8 @@ void FrameGroup::EffectCaculate(uint64_t object_id){
         std::shared_ptr<FrameItf>& last_frame = frame_objects_[object_id]->remote_frames_.back();
         for(const uint64_t& id : captured_objects_id_){
             std::shared_lock<std::shared_mutex> lock_i(frame_objects_[id]->frames_mutex_);
-            std::vector<std::shared_ptr<FrameItf>>& captured_local_frames = frame_objects_[id]->local_frames_;
-            for (std::vector<std::shared_ptr<FrameItf>>::reverse_iterator it = captured_local_frames.rbegin();
+            std::deque<std::shared_ptr<FrameItf>>& captured_local_frames = frame_objects_[id]->local_frames_;
+            for (std::deque<std::shared_ptr<FrameItf>>::reverse_iterator it = captured_local_frames.rbegin();
                 it != captured_local_frames.rend();
                 it++){
                 if((*it)->idx_ == last_frame->idx_ && !(*it)->processes_.empty()){

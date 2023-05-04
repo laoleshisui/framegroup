@@ -23,6 +23,7 @@ extern void FrameGroup_Connect(void* group, char* ip, int port);
 extern void FrameGroup_Login(void* group);
 extern void FrameGroup_EnterRoom(void* group, uint64_t room_id);
 extern void FrameGroup_ExitRoom(void* group, uint64_t room_id);
+extern void FrameGroup_SetSaveFrameFilePath(void* group, char* file_path);
 extern void FrameGroup_AddCapturer(void* group, uint64_t local_id, void* capturer);
 extern void FrameGroup_AddCaptureredObjects(void* group, int num_of_objects);
 extern void FrameGroup_AddRender(void* group, uint64_t local_or_remote_id, void* render);

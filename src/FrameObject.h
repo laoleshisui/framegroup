@@ -10,6 +10,7 @@
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
+#include <deque>
 
 #include <acore/Type.h>
 
@@ -38,15 +39,18 @@ private:
     uint64_t id_;
 
     std::shared_mutex frames_mutex_;
+    int max_frame_queue_size_;
     // Monotonically increasing frame idx
-    std::vector<std::shared_ptr<FrameItf>> local_frames_;//from ui_thread, to socket thread
-    std::vector<std::shared_ptr<FrameItf>> remote_frames_;//from socket_thread, to ui_thread
+    std::deque<std::shared_ptr<FrameItf>> local_frames_;
+    std::deque<std::shared_ptr<FrameItf>> remote_frames_;
     
     std::unique_ptr<FrameEncoder> encoder_;
     std::unique_ptr<FrameDecoder> decoder_;
 
     std::mutex effected_mutex_;
     CORE_MAP<uint64_t, CORE_SET<uint64_t>> effected_map_;//idx --> effected object ids
+
+    void AddFrame(bool is_local, std::shared_ptr<FrameItf> frame);
 
     // inputs:
     // Receive from capturer
@@ -59,6 +63,8 @@ private:
     std::function<void(std::shared_ptr<PacketItf>)> SendPacket;
     // Send to Render
     void SendFrame(std::shared_ptr<FrameItf> frame);
+    // save packet to file
+    std::function<void(std::shared_ptr<FrameItf>)> SaveFrame;
 };
 
 

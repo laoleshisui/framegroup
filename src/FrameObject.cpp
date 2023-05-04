@@ -4,11 +4,34 @@ using namespace framegroup;
 
 FrameObject::FrameObject()
 :id_(0),
+max_frame_queue_size_(1),
 encoder_(std::make_unique<FrameEncoder>()),
-decoder_(std::make_unique<FrameDecoder>())
+decoder_(std::make_unique<FrameDecoder>()),
+SendPacket(nullptr),
+SaveFrame(nullptr)
 {}
 
 FrameObject::~FrameObject(){}
+
+void FrameObject::AddFrame(bool is_local, std::shared_ptr<FrameItf> frame){
+    std::deque<std::shared_ptr<FrameItf>>* target_queue = &local_frames_;
+    if(!is_local){
+        target_queue = &remote_frames_;
+    }
+    std::shared_ptr<FrameItf> frame_to_save = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(frames_mutex_);
+        target_queue->push_back(frame);
+
+        if(target_queue->size() > max_frame_queue_size_){
+            frame_to_save = target_queue->front();
+            target_queue->pop_front();
+        }
+    }
+    if(frame_to_save && SaveFrame){
+        SaveFrame(frame_to_save);
+    }
+}
 
 void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
     // Not necessary to send local frame to render. it's from rendered.
@@ -16,10 +39,7 @@ void FrameObject::OnFrame(std::shared_ptr<FrameItf> frame){
 
     std::shared_ptr<acore::Recycler<PacketItf>::Recyclable> rpacket = encoder_->Encode(frame);
     std::shared_ptr<PacketItf> packet = rpacket->Get();
-    {
-        std::unique_lock<std::shared_mutex> lock(frames_mutex_);
-        local_frames_.push_back(frame);
-    }
+    AddFrame(true, frame);
     // send to server
     if(SendPacket){
         SendPacket(packet);
@@ -30,13 +50,10 @@ void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
     std::shared_ptr<acore::Recycler<FrameItf>::Recyclable> rframe = decoder_->Decode(packet);
     std::shared_ptr<FrameItf> frame = rframe->Get();
     std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame.get()));
-    {
-        std::unique_lock<std::shared_mutex> lock(frames_mutex_);
-        remote_frames_.push_back(frame_copy);
-    }
+    AddFrame(false, frame_copy);
 
     // send to render
-    SendFrame(frame);
+    SendFrame(frame_copy);
 
     // std::cout << id_ << ": " << frame->idx_ << " "<< frame->states_["POSITION"][0]<< " " << frame->states_["POSITION"][1]<<std::endl;
 }
