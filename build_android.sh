@@ -21,6 +21,8 @@ mkdir build_android
 fi
 cd build_android
 
+
+#    -DANDROID_STL=c++_shared \
 cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/${PROJECT} \
     -DLibevent_DIR=${Libevent_DIR}  \
     -Dprotobuf_DIR=${protobuf_DIR} \
@@ -31,7 +33,6 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/${PROJECT} \
     -Dtaskqueue_DIR=${taskqueue_DIR} \
     -DCMAKE_TOOLCHAIN_FILE=$NDK_ROOT/build/cmake/android.toolchain.cmake \
     -DANDROID_ABI=arm64-v8a \
-    -DANDROID_STL=c++_shared \
     -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=NEVER \
     ..
 
