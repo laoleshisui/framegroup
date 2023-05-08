@@ -97,6 +97,7 @@ swig_add_library(${PROJECT_NAME}_api
   LANGUAGE csharp
   OUTPUT_DIR ${CMAKE_SOURCE_DIR}/itf/csharp/ 
   SOURCES ${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i)
+set_property(TARGET ${PROJECT_NAME}_api PROPERTY SWIG_COMPILE_DEFINITIONS SWIG_CSHARP_NO_EXCEPTION_HELPER SWIG_CSHARP_NO_STRING_HELPER)
 target_link_libraries(${PROJECT_NAME}_api ${PROJECT_NAME})
 
 add_executable(main
