@@ -33,6 +33,7 @@ FrameGroup::~FrameGroup()
 }
 
 void FrameGroup::Connect(std::string ip, int port){
+    if(id_) return;
     acore::SocketAddress addr(std::move(ip), port);
     client_.Connect(addr);
     client_loop_ = std::thread(&acore::Client::Loop, &client_);
@@ -40,6 +41,7 @@ void FrameGroup::Connect(std::string ip, int port){
 }
 
 void FrameGroup::Login(){
+    if(id_) return;
     pframe::Login login;
     login.set_proto_type(pframe::ProtoType::LOGIN);
     client_.Send(client_.client_bev_, login.SerializeAsString());

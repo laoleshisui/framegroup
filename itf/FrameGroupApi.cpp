@@ -27,10 +27,10 @@ void FrameGroup_SetSaveFrameFilePath(void* group, char* file_path){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->SetSaveFrameFilePath(std::string(file_path));
 }
-void FrameGroup_AddCapturer(void* group, uint64_t local_id, void* capturer){
+void FrameGroup_AddCapturer(void* group, uint64_t remote_id, void* capturer){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
-    frame_group->AddCapturer(local_id, frame_capturer);
+    frame_group->AddCapturer(remote_id, frame_capturer);
 }
 void FrameGroup_AddCaptureredObjects(void* group, int num_of_objects){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
@@ -51,7 +51,9 @@ void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
 }
 void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values)->int{
+    std::function<framegroup::FrameGroup::OnEffect_FUNC> jcb = [=](uint64_t decider_remote_id, 
+    const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, 
+    const std::string& state_type, std::vector<std::string>& values)->int{
         std::vector<const char*> jargs;
         for(int i = 0; i < args.size(); ++i){
             jargs.push_back(args[i].c_str());
@@ -87,25 +89,25 @@ void FrameCapturer_AddProcess(void* capturer, char* type, char** args, uint32_t 
 void* CreateFrameRender(){
     return new framegroup::FrameRender();
 }
-void FrameRender_SetCallBack_OnState(void* render, FrameRender_OnState cb){
+void FrameRender_SetCallBack_OnState(void* render, uint64_t remote_id, FrameRender_OnState cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     std::function<framegroup::FrameRender::OnState_FUNC> jcb = [=](const std::string& type, const std::vector<std::string>& values){
         std::vector<const char*> jvalues;
         for(int i = 0; i < values.size(); ++i){
             jvalues.push_back(values[i].c_str());
         }
-        cb(type.c_str(), jvalues.data(), jvalues.size());
+        cb(remote_id, type.c_str(), jvalues.data(), jvalues.size());
     };
     frame_render->SetCallBackOnState(std::move(jcb));
 }
-void FrameRender_SetCallBack_OnProcess(void* render, FrameRender_OnProcess cb){
+void FrameRender_SetCallBack_OnProcess(void* render, uint64_t remote_id, FrameRender_OnProcess cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     std::function<framegroup::FrameRender::OnProcess_FUNC> jcb = [=](const std::string& type, const std::vector<std::string>& args){
         std::vector<const char*> jargs;
         for(int i = 0; i < args.size(); ++i){
             jargs.push_back(args[i].c_str());
         }
-        cb(type.c_str(), jargs.data(), jargs.size());
+        cb(remote_id, type.c_str(), jargs.data(), jargs.size());
     };
     frame_render->SetCallBackOnProcess(std::move(jcb));
 }
