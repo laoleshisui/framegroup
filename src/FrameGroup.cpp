@@ -69,18 +69,30 @@ void FrameGroup::SetSaveFrameFilePath(std::string file_path){
     save_frame_file_ = fopen(file_path.c_str(), "wb+");
 }
 
-void FrameGroup::AddCaptureredObjects(int num_of_objects){
+void FrameGroup::AddCaptureredObjects(std::string object_type, int num_of_objects, bool commit){
     assert(id_);
     if(!id_ || !num_of_objects){
+        return;
+    }
+
+    pending_captured_objects_nums_[object_type] += num_of_objects;
+
+    if(!commit){
         return;
     }
 
     pframe::RegisterObjects register_objects;
     register_objects.set_group_id(id_);
     register_objects.set_proto_type(pframe::ProtoType::REGISTER_OBJECTS);
-    register_objects.set_num_of_objects(num_of_objects);
+
+    for(CORE_MAP<std::string, int>::value_type& i : pending_captured_objects_nums_){
+        register_objects.add_object_types(i.first);
+        register_objects.add_nums_of_objects(i.second);
+    }
 
     client_.Send(client_.client_bev_, register_objects.SerializeAsString());
+
+    pending_captured_objects_nums_.clear();
 }
 
 void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
@@ -178,29 +190,50 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             pframe::RegisterObjects registered_objects;
             registered_objects.ParseFromString(event.data());
 
-            for(const uint64_t& remote_id : registered_objects.ids()){
-                std::lock_guard<std::mutex> lock(objects_id_mutex_);
-                frame_objects_[remote_id] = std::make_unique<FrameObject>();
-                frame_objects_[remote_id]->id_ = remote_id;
-                captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
-                if(OnUpdateId){
-                    OnUpdateId(1, remote_id);
+            int ids_idx = 0;
+            for(int i = 0; i < registered_objects.nums_of_objects_size(); ++i){
+                int num = registered_objects.nums_of_objects(i);
+                std::string type = registered_objects.object_types(i);
+                
+                {
+                    std::lock_guard<std::mutex> lock(objects_id_mutex_);
+                    for(int j = 0; j < num; ++j){
+                        uint64_t remote_id = registered_objects.ids(ids_idx + j);
+
+                        frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                        frame_objects_[remote_id]->id_ = remote_id;
+                        captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
+
+                        OnUpdateId(1, type, remote_id);
+                    }
                 }
+                ids_idx += num;
             }
+            
             InitCapturedFrameObjects();
         }
         else if(event.code() == pframe::EventCode::UNREGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
             registered_objects.ParseFromString(std::move(event.data()));
 
-            for(const uint64_t& uncaptured_id : registered_objects.ids()){
-                std::lock_guard<std::mutex> lock(objects_id_mutex_);
-                frame_objects_[uncaptured_id] = std::make_unique<FrameObject>();
-                frame_objects_[uncaptured_id]->id_ = uncaptured_id;
-                uncaptured_objects_id_.insert(uncaptured_id);//atfer FrameObject being created!
-                if(OnUpdateId){
-                    OnUpdateId(0, uncaptured_id);
+            int ids_idx = 0;
+            for(int i = 0; i < registered_objects.object_types_size(); ++i){
+                int num = registered_objects.nums_of_objects(i);
+                std::string type = registered_objects.object_types(i);
+                
+                {
+                    std::lock_guard<std::mutex> lock(objects_id_mutex_);
+                    for(int j = 0; j < num; ++j){
+                        uint64_t remote_id = registered_objects.ids(ids_idx + j);
+
+                        frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                        frame_objects_[remote_id]->id_ = remote_id;
+                        uncaptured_objects_id_.insert(remote_id);//atfer FrameObject being created!
+
+                        OnUpdateId(0, type, remote_id);
+                    }
                 }
+                ids_idx += num;
             }
         }
         else if(event.code() == pframe::EventCode::FRAME_IDX_SYNC){
@@ -222,6 +255,8 @@ void FrameGroup::EventCB(acore::Server::Client* client, const short event){
 
 
 void FrameGroup::EffectCaculate(uint64_t object_id){
+    if(!OnEffect) return;
+
     std::lock_guard<std::mutex> lock(objects_id_mutex_);
     std::shared_lock<std::shared_mutex> lock_object_id(frame_objects_[object_id]->frames_mutex_);
 

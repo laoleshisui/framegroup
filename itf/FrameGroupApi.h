@@ -13,7 +13,7 @@ extern "C"{
 #endif
 
 typedef void(*FrameGroup_OnLogin)(int code, int id);
-typedef void(*FrameGroup_OnUpdateId)(int captured, uint64_t remote_id);
+typedef void(*FrameGroup_OnUpdateId)(int captured, const char* object_type, uint64_t remote_id);
 typedef int(*FrameGroup_OnEffect)(uint64_t decider_remote_id, const char* process_type, const char** args, uint64_t other_remote_id, int args_rows, const char* state_type, const char** values, int values_rows);
 typedef void (*FrameRender_OnState)(uint64_t remote_id, const char* type, const char** values, int rows);
 typedef void (*FrameRender_OnProcess)(uint64_t remote_id, const char* type, const char** args, int rows);
@@ -25,7 +25,7 @@ extern void FrameGroup_EnterRoom(void* group, uint64_t room_id);
 extern void FrameGroup_ExitRoom(void* group, uint64_t room_id);
 extern void FrameGroup_SetSaveFrameFilePath(void* group, char* file_path);
 extern void FrameGroup_AddCapturer(void* group, uint64_t remote_id, void* capturer);
-extern void FrameGroup_AddCaptureredObjects(void* group, int num_of_objects);
+extern void FrameGroup_AddCaptureredObjects(void* group, char* object_type, int num_of_objects, int commit);
 extern void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render);
 extern void FrameGroup_SetCallBack_OnLogin(void* group, FrameGroup_OnLogin cb);
 extern void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb);

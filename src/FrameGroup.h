@@ -31,7 +31,7 @@ class FrameGroup
 {
 public:
     typedef void(OnLogin_FUNC)(int code, int id);
-    typedef void(OnUpdateId_FUNC)(int captured, uint64_t remote_id);
+    typedef void(OnUpdateId_FUNC)(int captured, const std::string& object_type, uint64_t remote_id);
     typedef int(OnEffect_FUNC)(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
 
     FrameGroup();
@@ -44,7 +44,7 @@ public:
     
     void SetSaveFrameFilePath(std::string file_path);
 
-    void AddCaptureredObjects(int num_of_objects);
+    void AddCaptureredObjects(std::string object_type, int num_of_objects, bool commit=false);
     void AddCapturer(uint64_t remote_id, FrameCapturer* capturer);
     void AddRender(uint64_t remote_id, FrameRender* render);
 
@@ -63,7 +63,8 @@ private:
     CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;
     CORE_SET<uint64_t> captured_objects_id_;
     CORE_SET<uint64_t> uncaptured_objects_id_;
-    
+    CORE_MAP<std::string, int> pending_captured_objects_nums_;
+
     acore::Client client_;
     std::thread client_loop_;
 

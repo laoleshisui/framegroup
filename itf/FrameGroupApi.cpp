@@ -32,9 +32,9 @@ void FrameGroup_AddCapturer(void* group, uint64_t remote_id, void* capturer){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     frame_group->AddCapturer(remote_id, frame_capturer);
 }
-void FrameGroup_AddCaptureredObjects(void* group, int num_of_objects){
+void FrameGroup_AddCaptureredObjects(void* group, char* object_type, int num_of_objects, int commit){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->AddCaptureredObjects(num_of_objects);
+    frame_group->AddCaptureredObjects(std::string(object_type), num_of_objects, (bool)commit);
 }
 void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
@@ -47,7 +47,10 @@ void FrameGroup_SetCallBack_OnLogin(void* group, FrameGroup_OnLogin cb){
 }
 void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
-    frame_group->SetCallBackOnUpdateId(std::move(cb));
+    std::function<framegroup::FrameGroup::OnUpdateId_FUNC> jcb = [=](int captured, const std::string& object_type, uint64_t remote_id){
+        cb(captured, object_type.c_str(), remote_id);
+    };
+    frame_group->SetCallBackOnUpdateId(std::move(jcb));
 }
 void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;

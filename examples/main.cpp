@@ -22,7 +22,7 @@ std::mutex mutex;
 std::unique_lock<std::mutex> ul(mutex);
 std::condition_variable cv;
 
-void cb_FrameGroup_OnUpdateId_01(int captured, uint64_t remote_id){
+void cb_FrameGroup_OnUpdateId_01(int captured, const char* object_type, uint64_t remote_id){
     std::cout << "cb_FrameGroup_OnUpdateId_01:" << captured << " " << remote_id << std::endl;
     if(captured){
         FrameGroup_AddCapturer(frame_group_01, remote_id, frame_capturer_01);
@@ -30,7 +30,7 @@ void cb_FrameGroup_OnUpdateId_01(int captured, uint64_t remote_id){
         FrameGroup_AddRender(frame_group_01, remote_id, frame_render_01);
     }
 }
-void cb_FrameGroup_OnUpdateId_02(int captured, uint64_t remote_id){
+void cb_FrameGroup_OnUpdateId_02(int captured, const char* object_type, uint64_t remote_id){
     std::cout << "cb_FrameGroup_OnUpdateId_02:" << captured << " " << remote_id << std::endl;
     if(captured){
         FrameGroup_AddCapturer(frame_group_02, remote_id, frame_capturer_02);
@@ -55,7 +55,7 @@ void cb_OnProcess_02(uint64_t remote_id, const char* type, const char** values, 
 void thread_capture_01(){
     static float x = 0, y = 0;
     static char* values[10];
-    return;
+    // return;
     while(true){
         values[0] = (char*)std::to_string(x).c_str();
         values[1] = (char*)std::to_string(y).c_str();
@@ -68,7 +68,7 @@ void thread_capture_02(){
     static float x = 1, y = 1;
     static char* values[10];
     int attack = 1;
-    return;
+    // return;
     while(true){
         values[0] = (char*)std::to_string(attack).c_str();
         // values[1] = (char*)std::to_string(y).c_str();
@@ -82,21 +82,21 @@ void thread_capture_02(){
 
 
 void cb_FrameGroup_OnLogin_01(int code, int id){
-    std::cout << "cb_FrameGroup_OnLogin_01:" << code << " " << id << std::endl;
+    // std::cout << "cb_FrameGroup_OnLogin_01:" << code << " " << id << std::endl;
 
     FrameGroup_EnterRoom(frame_group_01,1);
     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    FrameGroup_AddCaptureredObjects(frame_group_01, 1);
+    FrameGroup_AddCaptureredObjects(frame_group_01, "test_type_1", 1, true);
 
     std::thread capturer_thread_01(thread_capture_01);
     capturer_thread_01.detach();
 }
 void cb_FrameGroup_OnLogin_02(int code, int id){
-    std::cout << "cb_FrameGroup_OnLogin_02:" << code << " " << id << std::endl;
+    // std::cout << "cb_FrameGroup_OnLogin_02:" << code << " " << id << std::endl;
 
     FrameGroup_EnterRoom(frame_group_02, 1);
     // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    FrameGroup_AddCaptureredObjects(frame_group_02, 1);
+    FrameGroup_AddCaptureredObjects(frame_group_02, "test_type_2", 1, true);
 
     std::thread capturer_thread_02(thread_capture_02);
     capturer_thread_02.detach();
