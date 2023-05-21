@@ -39,6 +39,7 @@ public:
 
     void Connect(std::string ip, int port);
     void Login();
+    void Logout();
     void EnterRoom(uint64_t room_id = 0);
     void ExitRoom(uint64_t room_id = 0);
     

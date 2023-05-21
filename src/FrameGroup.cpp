@@ -46,6 +46,12 @@ void FrameGroup::Login(){
     login.set_proto_type(pframe::ProtoType::LOGIN);
     client_.Send(client_.client_bev_, login.SerializeAsString());
 }
+void FrameGroup::Logout(){
+    if(id_) return;
+    pframe::Type logout;
+    logout.set_proto_type(pframe::ProtoType::LOGOUT);
+    client_.Send(client_.client_bev_, logout.SerializeAsString());
+}
 void FrameGroup::EnterRoom(uint64_t room_id){
     assert(id_);
     pframe::EnterRoom enter_room;
@@ -182,7 +188,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             id_ = event.id();
             OnLogin(1, id_);
         }
-        else if(event.code() == pframe::EventCode::LOGIN_FAILED){
+        else if(event.code() == pframe::EventCode::LOGIN_FAILED || event.code() == pframe::EventCode::LOGOUT_SUCCEED){
             id_ = 0;
             OnLogin(0, id_);
         }
