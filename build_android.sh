@@ -13,6 +13,8 @@ export Libevent_DIR=$INSTALL_DIR/libevent/lib/cmake/libevent
 export acore_DIR=$INSTALL_DIR/acore/lib/cmake/acore
 export aproto_DIR=$INSTALL_DIR/aproto/lib/cmake/aproto
 export taskqueue_DIR=$INSTALL_DIR/taskqueue/lib/cmake/taskqueue
+export glog_DIR=$INSTALL_DIR/glog/lib/cmake/glog
+export libwebsockets_DIR=$INSTALL_DIR/libwebsockets/lib/cmake/libwebsockets
 
 # export CMAKE_PREFIX_PATH=${protobuf_DIR}:${absl_DIR}:${utf8_range_DIR}:${Libevent_DIR}:${acore_DIR}:${aproto_DIR}:${taskqueue_DIR}
 
@@ -31,6 +33,9 @@ cmake -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}/${PROJECT} \
     -Dacore_DIR=${acore_DIR} \
     -Daproto_DIR=${aproto_DIR} \
     -Dtaskqueue_DIR=${taskqueue_DIR} \
+    -Dglog_DIR=${glog_DIR} \
+    -DCORE_ANDROID=ON \
+    -Dlibwebsockets_DIR=${libwebsockets_DIR} \
     -DCMAKE_TOOLCHAIN_FILE=$NDK_ROOT/build/cmake/android.toolchain.cmake \
     -DANDROID_ABI=arm64-v8a \
     -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=NEVER \
