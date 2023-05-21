@@ -38,6 +38,7 @@ public:
     ~FrameGroup();
 
     void Connect(std::string ip, int port);
+    void DisConnect();
     void Login();
     void Logout();
     void EnterRoom(uint64_t room_id = 0);

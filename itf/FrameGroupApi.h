@@ -20,7 +20,9 @@ typedef void (*FrameRender_OnProcess)(uint64_t remote_id, const char* type, cons
 
 extern void* CreateFrameGroup();
 extern void FrameGroup_Connect(void* group, char* ip, int port);
+extern void FrameGroup_DisConnect(void* group);
 extern void FrameGroup_Login(void* group);
+extern void FrameGroup_Logout(void* group);
 extern void FrameGroup_EnterRoom(void* group, uint64_t room_id);
 extern void FrameGroup_ExitRoom(void* group, uint64_t room_id);
 extern void FrameGroup_SetSaveFrameFilePath(void* group, char* file_path);

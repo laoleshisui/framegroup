@@ -40,6 +40,12 @@ void FrameGroup::Connect(std::string ip, int port){
     client_loop_.detach();
 }
 
+void FrameGroup::DisConnect(){
+    if(client_.client_bev_){
+        client_.DisConnect(client_.client_bev_);
+    }
+}
+
 void FrameGroup::Login(){
     if(id_) return;
     pframe::Login login;

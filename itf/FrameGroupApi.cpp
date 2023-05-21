@@ -11,9 +11,17 @@ void FrameGroup_Connect(void* group, char* ip, int port){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->Connect(std::string(ip), port);
 }
+void FrameGroup_DisConnect(void* group){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    frame_group->DisConnect();
+}
 void FrameGroup_Login(void* group){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->Login();
+}
+void FrameGroup_Logout(void* group){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    frame_group->Logout();
 }
 void FrameGroup_EnterRoom(void* group, uint64_t room_id){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
