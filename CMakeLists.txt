@@ -54,14 +54,9 @@ set(API_C_ITF
 )
 
 add_library(
-    ${PROJECT_NAME} STATIC
+    ${PROJECT_NAME}
     ${SRC}
 )
-
-# add_library(
-#     ${PROJECT_NAME}_shared SHARED
-#     ${SRC}
-# )
 
 
 #deps
@@ -85,6 +80,9 @@ list(APPEND target_dependencies "taskqueue")
 
 
 # use swig to generate other language itf
+cmake_policy(SET CMP0078 NEW)
+cmake_policy(SET CMP0086 NEW)
+cmake_policy(SET CMP0122 NEW)
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
 set(CMAKE_SWIG_FLAGS "")
