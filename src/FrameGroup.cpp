@@ -5,6 +5,8 @@
 
 #include <aproto/pframe/frame.pb.h>
 
+#include <acore/log/Log.h>
+
 using namespace framegroup;
 
 FrameGroup::FrameGroup()
@@ -160,7 +162,6 @@ void FrameGroup::SaveFrame(uint64_t object_id, std::shared_ptr<PacketItf> packet
 }
 
 void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_int32_t packet_len){
-
     const char* msg = (const char*)evbuffer_pullup(evb, packet_len);
     const char* data = msg + PACKET_HEAD_SIZE;
     uint16_t* len = (uint16_t*)msg;
@@ -168,6 +169,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
     pframe::Relay relay;
     relay.ParseFromArray(data, *len);
 
+    // CORE_LOG(INFO) << relay.proto_type();
     if(relay.proto_type() == pframe::ProtoType::FRAME){
         pframe::Frame frame;
         frame.ParseFromArray(data, *len);
@@ -189,6 +191,8 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
     else if(relay.proto_type() == pframe::ProtoType::EVENT){
         pframe::Event event;
         event.ParseFromArray(data, *len);
+
+        CORE_LOG(INFO) << event.code()<< " "  << event.id();
         
         if(event.code() == pframe::EventCode::LOGIN_SUCCEED){
             id_ = event.id();
