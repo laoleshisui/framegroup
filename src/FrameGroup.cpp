@@ -195,6 +195,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         CORE_LOG(INFO) << event.code()<< " "  << event.id();
         
         if(event.code() == pframe::EventCode::LOGIN_SUCCEED){
+            assert(event.id());
             id_ = event.id();
             OnLogin(1, id_);
         }

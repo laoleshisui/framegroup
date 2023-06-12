@@ -27,6 +27,9 @@
     }\
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
         CORE_LOG(INFO)<< "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
+        if(code != 1){\
+            return;\
+        }\
         FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
         FrameGroup_AddCaptureredObjects(frame_group_##x, "test_type_##x", 1, true);\
         std::thread capturer_thread_##x(thread_capture_##x);\
@@ -50,6 +53,9 @@
     }\    
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
         CORE_LOG(INFO) << "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
+        if(code != 1){\
+            return;\
+        }\
         FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
     }\
     void cb_FrameGroup_OnUpdateId_##x(int captured, const char* object_type, uint64_t remote_id){\
