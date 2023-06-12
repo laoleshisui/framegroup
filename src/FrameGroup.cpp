@@ -12,6 +12,7 @@ using namespace framegroup;
 FrameGroup::FrameGroup()
 :id_(0),
 time_controller_(std::make_unique<FrameTimeController>()),
+objects_id_mutex_(),
 client_(6),
 OnUpdateId(nullptr),
 OnLogin(nullptr),
@@ -200,8 +201,8 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             OnLogin(1, id_);
         }
         else if(event.code() == pframe::EventCode::LOGIN_FAILED || event.code() == pframe::EventCode::LOGOUT_SUCCEED){
-            id_ = 0;
             OnLogin(0, id_);
+            id_ = 0;//trigger after OnLogin
         }
         else if(event.code() == pframe::EventCode::REGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;

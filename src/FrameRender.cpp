@@ -3,7 +3,8 @@
 using namespace framegroup;
 
 FrameRender::FrameRender()
-:OnState(nullptr),
+:cb_mutex_(),
+OnState(nullptr),
 OnProcess(nullptr)
 {}
 FrameRender::~FrameRender(){}

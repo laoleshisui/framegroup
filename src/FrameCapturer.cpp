@@ -7,6 +7,7 @@ acore::Recycler<acore::Task> FrameCapturer::available_tasks_ = acore::Recycler<a
 
 FrameCapturer::FrameCapturer()
 :time_controller_(nullptr),
+frame_mutex_(),
 send_task_pool_(1),
 frame_(std::make_unique<FrameItf>()),
 has_update_(false)
@@ -27,13 +28,12 @@ void FrameCapturer::Capture(){
 
     std::shared_ptr<acore::Recycler<acore::Task>::Recyclable> task = std::shared_ptr<acore::Recycler<acore::Task>::Recyclable>(available_tasks_.Request());
     
-    std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
     frame_->processes_.clear();
     (*task)->run_ = [=, this]{
-        for (FrameSinkItf* sink : sinks_){
-            // copy frame_
+        std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
+        RunOnEverySink([=](FrameSinkItf* sink){
             sink->OnFrame(frame_copy);
-        }
+        });
     };
     send_task_pool_.PostTask((*task));
 

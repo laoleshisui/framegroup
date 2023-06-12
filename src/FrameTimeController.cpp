@@ -10,9 +10,11 @@
 using namespace framegroup;
 
 FrameTimeController::FrameTimeController()
-:delay_ms_(32),
+:mutex_(),
+delay_ms_(32),
 first_frame_time_(0),
 first_frame_idx_(0),
+timer_mutex_(),
 timer_(std::make_unique<acore::Timer>(delay_ms_, std::bind(&FrameTimeController::Run, this)))
 {
     timer_->Start();
