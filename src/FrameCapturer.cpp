@@ -28,10 +28,10 @@ void FrameCapturer::Capture(){
 
     std::shared_ptr<acore::Recycler<acore::Task>::Recyclable> task = std::shared_ptr<acore::Recycler<acore::Task>::Recyclable>(available_tasks_.Request());
     
+    std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
     frame_->processes_.clear();
     (*task)->run_ = [=, this]{
-        std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
-        RunOnEverySink([=](FrameSinkItf* sink){
+        RunOnEverySink([&](FrameSinkItf* sink){
             sink->OnFrame(frame_copy);
         });
     };

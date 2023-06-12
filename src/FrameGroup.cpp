@@ -259,7 +259,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         else if(event.code() == pframe::EventCode::FRAME_IDX_SYNC){
             uint64_t client_idx = event.id();
             uint64_t server_idx = event.target_id();
-            std::cout << "FRAME_IDX_SYNC:" << server_idx << " " <<client_idx << std::endl;
+            CORE_LOG(INFO) << "FRAME_IDX_SYNC:" << server_idx << " " <<client_idx;
             if(time_controller_->IsStarted()){
                 time_controller_->Tune(client_idx - server_idx);
             }else{

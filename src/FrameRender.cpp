@@ -1,4 +1,5 @@
 #include "FrameRender.h"
+#include <acore/log/Log.h>
 
 using namespace framegroup;
 
