@@ -7,6 +7,8 @@ FrameObject::FrameObject()
 :id_(0),
 frames_mutex_(),
 max_frame_queue_size_(1),
+local_frames_(),
+remote_frames_(),
 encoder_(std::make_unique<FrameEncoder>()),
 decoder_(std::make_unique<FrameDecoder>()),
 effected_mutex_(),
@@ -56,7 +58,7 @@ void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
 }
 
 void FrameObject::SendFrame(std::shared_ptr<FrameItf> frame){
-    RunOnEverySink([&](FrameSinkItf* sink){
+    RunOnEverySink([=](FrameSinkItf* sink){
         sink->OnFrame(frame);
     });
 }

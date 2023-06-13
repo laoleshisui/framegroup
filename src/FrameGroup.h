@@ -55,13 +55,13 @@ public:
     void SetCallBackOnLogin(std::function<OnLogin_FUNC> cb);
     void SetCallBackOnEffect(std::function<OnEffect_FUNC> cb);
 private:
-    uint64_t id_;
+    std::atomic<uint64_t> id_;
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
 
     std::unique_ptr<FrameTimeController> time_controller_;
 
-    //FIXME: if it need add objects dynamically, those 2 set should be ensured thread-safe, as well as frame_objects_;
-    std::mutex objects_id_mutex_;
+    //objects_id_mutex_ ensure all apis of this class which not invoked frequently are thread-safe and all data-staructures of this class are thread-safe
+    std::recursive_mutex objects_id_mutex_;
     CORE_MAP<uint64_t, std::unique_ptr<FrameObject>> frame_objects_;
     CORE_SET<uint64_t> captured_objects_id_;
     CORE_SET<uint64_t> uncaptured_objects_id_;

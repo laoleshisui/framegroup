@@ -81,10 +81,12 @@ void FrameGroup::ExitRoom(uint64_t room_id){
 }
 
 void FrameGroup::SetSaveFrameFilePath(std::string file_path){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     save_frame_file_ = fopen(file_path.c_str(), "wb+");
 }
 
 void FrameGroup::AddCaptureredObjects(std::string object_type, int num_of_objects, bool commit){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     assert(id_);
     if(!id_ || !num_of_objects){
         return;
@@ -111,18 +113,21 @@ void FrameGroup::AddCaptureredObjects(std::string object_type, int num_of_object
 }
 
 void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     capturer->AddSink(frame_objects_[remote_id].get());
     frame_capturers_[remote_id] = capturer;
     capturer->AttachTimeController(time_controller_.get());
 }
 
 void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     frame_objects_[remote_id]->AddSink(render);
 }
 
 void FrameGroup::InitCapturedFrameObjects(){
     //TODO fill frame_objects_ & captured_objects_id_ & uncaptured_objects_id_
     //Maybe from server data
+   std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_); 
     for(CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::value_type& i : frame_objects_){
         i.second->SendPacket = std::bind(&FrameGroup::SendPacket, this, i.first, std::placeholders::_1);
     }
@@ -149,6 +154,7 @@ void FrameGroup::SendPacket(uint64_t object_id, std::shared_ptr<PacketItf> packe
 }
 
 void FrameGroup::SaveFrame(uint64_t object_id, std::shared_ptr<PacketItf> packet){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     if(!save_frame_file_) return;
 
     std::shared_ptr<acore::Task> task = std::make_shared<acore::Task>();
@@ -180,16 +186,22 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         // Only receive other groups' frame
         assert(frame.group_id() != id_);
 
+        CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::iterator it;
         uint64_t object_id = frame.object_id();
-        CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::iterator it = frame_objects_.find(object_id);
-        if (it != frame_objects_.end()){
-            std::shared_ptr<PacketItf> packet = std::make_shared<PacketItf>();
-            // to PacketItf
-            packet->ParseFrom(frame);
-            it->second->OnPacket(packet);
-            SaveFrame(object_id, packet);
-            EffectCaculate(object_id);
+        {
+            std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+            it = frame_objects_.find(object_id);
+            if (it == frame_objects_.end()){
+                return;
+            } 
         }
+
+        std::shared_ptr<PacketItf> packet = std::make_shared<PacketItf>();
+        // to PacketItf
+        packet->ParseFrom(frame);
+        it->second->OnPacket(packet);
+        SaveFrame(object_id, packet);
+        EffectCaculate(object_id);
     }
     else if(relay.proto_type() == pframe::ProtoType::EVENT){
         pframe::Event event;
@@ -198,11 +210,13 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         CORE_LOG(INFO) << event.code()<< " "  << event.id();
         
         if(event.code() == pframe::EventCode::LOGIN_SUCCEED){
+            std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
             assert(event.id());
             id_ = event.id();
             OnLogin(1, id_);
         }
         else if(event.code() == pframe::EventCode::LOGIN_FAILED || event.code() == pframe::EventCode::LOGOUT_SUCCEED){
+            std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
             id_ = 0;
             OnLogin(0, id_);
         }
@@ -216,7 +230,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
                 std::string type = registered_objects.object_types(i);
                 
                 {
-                    std::lock_guard<std::mutex> lock(objects_id_mutex_);
+                    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
                     for(int j = 0; j < num; ++j){
                         uint64_t remote_id = registered_objects.ids(ids_idx + j);
 
@@ -242,7 +256,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
                 std::string type = registered_objects.object_types(i);
                 
                 {
-                    std::lock_guard<std::mutex> lock(objects_id_mutex_);
+                    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
                     for(int j = 0; j < num; ++j){
                         uint64_t remote_id = registered_objects.ids(ids_idx + j);
 
@@ -260,11 +274,14 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             uint64_t client_idx = event.id();
             uint64_t server_idx = event.target_id();
             CORE_LOG(INFO) << "FRAME_IDX_SYNC:" << server_idx << " " <<client_idx;
-            if(time_controller_->IsStarted()){
-                time_controller_->Tune(client_idx - server_idx);
-            }else{
-                assert(client_idx == 0);
-                time_controller_->Start(server_idx);
+            {
+                std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+                if(time_controller_->IsStarted()){
+                    time_controller_->Tune(client_idx - server_idx);
+                }else{
+                    assert(client_idx == 0);
+                    time_controller_->Start(server_idx);
+                }
             }
         }
     }
@@ -277,7 +294,7 @@ void FrameGroup::EventCB(acore::Server::Client* client, const short event){
 void FrameGroup::EffectCaculate(uint64_t object_id){
     if(!OnEffect) return;
 
-    std::lock_guard<std::mutex> lock(objects_id_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     std::shared_lock<std::shared_mutex> lock_object_id(frame_objects_[object_id]->frames_mutex_);
 
     if(captured_objects_id_.contains(object_id)){
@@ -315,6 +332,7 @@ void FrameGroup::EffectCaculate(uint64_t object_id){
         }
     }else{
         //FIXME: error? maybe just ignore it
+        CORE_LOG(ERROR) << "unknown object id";
         assert(0);
     }
 }
@@ -346,11 +364,14 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
 }
 
 void FrameGroup::SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     OnUpdateId = cb;
 }
 void FrameGroup::SetCallBackOnLogin(std::function<OnLogin_FUNC> cb){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     OnLogin = cb;
 }
 void FrameGroup::SetCallBackOnEffect(std::function<OnEffect_FUNC> cb){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     OnEffect = cb;
 }

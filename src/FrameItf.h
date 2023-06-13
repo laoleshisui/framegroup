@@ -36,6 +36,9 @@ public:
     :type_(pframe::Frametype::P),
     idx_(0)
     {}
+    FrameItf(FrameItf&) = default;
+    FrameItf& operator=(FrameItf&) = default;
+    
     void ToProto(pframe::FrameData& pframe){
         pframe.set_type(type_);
         pframe.set_idx(idx_);

@@ -31,7 +31,7 @@ void FrameCapturer::Capture(){
     std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
     frame_->processes_.clear();
     (*task)->run_ = [=, this]{
-        RunOnEverySink([&](FrameSinkItf* sink){
+        RunOnEverySink([=](FrameSinkItf* sink){
             sink->OnFrame(frame_copy);
         });
     };
