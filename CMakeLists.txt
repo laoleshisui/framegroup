@@ -114,7 +114,7 @@ target_include_directories(${PROJECT_NAME}
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 # fill include and lib
-install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_api
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_api main
   # ${PROJECT_NAME}_shared
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
