@@ -6,6 +6,7 @@
 
 
 #define IP "127.0.0.1"
+// #define IP "1.15.134.166"
 #define PORT 10002
 #define ROOM_ID 1
 #define CAPTURE_DELAY_MS 16
