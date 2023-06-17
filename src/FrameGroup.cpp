@@ -30,6 +30,7 @@ save_frame_file_(NULL)
 
 FrameGroup::~FrameGroup()
 {
+    DisConnect();
     RemoveAllIDs();
     if(save_frame_file_){
         fflush(save_frame_file_);
@@ -128,7 +129,7 @@ void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
 void FrameGroup::RemoveCapturer(uint64_t remote_id){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     if(!frame_capturers_.contains(remote_id)){
-        CORE_LOG(ERROR) << "frame_capturers_ does not contian id:" << remote_id;
+        CORE_LOG(WARNING) << "frame_capturers_ does not contian id:" << remote_id;
         return;
     }
     FrameCapturer* capturer = frame_capturers_[remote_id];
@@ -150,8 +151,8 @@ void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
 void FrameGroup::RemoveRender(uint64_t remote_id){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     if(!frame_renders_.contains(remote_id)){
-        CORE_LOG(ERROR) << "frame_renders_ does not contianed id:" << remote_id;
-        assert(0);
+        CORE_LOG(WARNING) << "frame_renders_ does not contianed id:" << remote_id;
+        return;
     }
     FrameRender* render = frame_renders_[remote_id];
     frame_objects_[remote_id]->RemoveSink(render);

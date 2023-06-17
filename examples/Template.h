@@ -33,7 +33,7 @@
         FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
     }\
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
-        CORE_LOG(INFO)<< "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
+        CORE_LOG(INFO)<< "cb_FrameGroup_OnLogin_" << #x << ": " << code << " " << id;\
         if(code != 1){\
             is_capturing_##x = false;\
         }else{\
@@ -42,7 +42,7 @@
         }\
     }\
     void cb_FrameGroup_OnUpdateId_##x(int captured, const char* object_type, uint64_t remote_id){\
-        CORE_LOG(INFO)<< "cb_FrameGroup_OnUpdateId_##x:" << captured << " " << remote_id;\
+        CORE_LOG(INFO)<< "cb_FrameGroup_OnUpdateId_" << #x << ": " << captured << " " << remote_id;\
         if(captured){\
             FrameGroup_AddCapturer(frame_group_##x, remote_id, frame_capturer_##x);\
             std::thread capturer_thread_##x(thread_capture_##x);\
@@ -55,16 +55,16 @@
     void* frame_group_##x = CreateFrameGroup();\
     CORE_SET<void*> frame_renders_##x;\
     void cb_OnState_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
-        CORE_LOG(INFO)<<"cb_OnState_"<< remote_id << ":" << type << values[0];\
+        CORE_LOG(INFO)<<"cb_OnState_" << #x << ": "<< remote_id << ":" << type << values[0];\
     }\
     void cb_OnProcess_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
-        CORE_LOG(INFO)<<"cb_OnProcess_"<< remote_id <<":" << type << " " << values[0];\
+        CORE_LOG(INFO)<<"cb_OnProcess_" << #x << ": "<< remote_id <<":" << type << " " << values[0];\
     }\
     void cb_FrameGroup_OnCaptured_##x(){\
         /*null*/\
     }\
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
-        CORE_LOG(INFO) << "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
+        CORE_LOG(INFO) << "cb_FrameGroup_OnLogin_" << #x << ": " << code << " " << id;\
         if(code != 1){\
             return;\
         }else{\
@@ -72,7 +72,7 @@
         }\
     }\
     void cb_FrameGroup_OnUpdateId_##x(int captured, const char* object_type, uint64_t remote_id){\
-        CORE_LOG(INFO) << "cb_FrameGroup_OnUpdateId_##x:" << captured << " " << remote_id;\
+        CORE_LOG(INFO) << "cb_FrameGroup_OnUpdateId_" << #x << ": " << captured << " " << remote_id;\
         if(captured){\
         }else{\
             void* frame_render = CreateFrameRender();\
@@ -102,16 +102,16 @@
         DeleteFrameCapturer(frame_capturer_##x);\
     }\
     void cb_OnState_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
-        CORE_LOG(INFO)<<"cb_OnState_"<< remote_id << ":" << type << values[0];\
+        CORE_LOG(INFO)<<"cb_OnState_" << #x << ": " << remote_id << ":" << type << values[0];\
     }\
     void cb_OnProcess_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
-        CORE_LOG(INFO)<<"cb_OnProcess_"<< remote_id <<":" << type << " " << values[0];\
+        CORE_LOG(INFO)<<"cb_OnProcess_" << #x << ": " << remote_id <<":" << type << " " << values[0];\
     }\
     void cb_FrameGroup_OnCaptured_##x(){\
         FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
     }\
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
-        CORE_LOG(INFO)<< "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
+        CORE_LOG(INFO)<< "cb_FrameGroup_OnLogin_" << #x << ": " << code << " " << id;\
         if(code != 1){\
             is_capturing_##x = false;\
         }else{\
@@ -120,7 +120,7 @@
         }\
     }\
     void cb_FrameGroup_OnUpdateId_##x(int captured, const char* object_type, uint64_t remote_id){\
-        CORE_LOG(INFO)<< "cb_FrameGroup_OnUpdateId_##x:" << captured << " " << remote_id;\
+        CORE_LOG(INFO)<< "cb_FrameGroup_OnUpdateId_" << #x << ": " << captured << " " << remote_id;\
         if(captured){\
             FrameGroup_AddCapturer(frame_group_##x, remote_id, frame_capturer_##x);\
             std::thread capturer_thread_##x(thread_capture_##x);\
@@ -147,13 +147,13 @@
 
 #define DELETE_RENDER(x) \
     DeleteFrameGroup(frame_group_##x);\
-    for(const CORE_SET<void*>::value_type& id: frame_renders_##x){\
-        DeleteFrameRender(id);\
+    for(const CORE_SET<void*>::value_type& render: frame_renders_##x){\
+        DeleteFrameRender(render);\
     }
 
 #define DELETE_CAPTUTER_RENDER(x) \
     is_capturing_##x = false;\
     DeleteFrameGroup(frame_group_##x);\
-    for(const CORE_SET<void*>::value_type& id: frame_renders_##x){\
-        DeleteFrameRender(id);\
+    for(const CORE_SET<void*>::value_type& render: frame_renders_##x){\
+        DeleteFrameRender(render);\
     }
