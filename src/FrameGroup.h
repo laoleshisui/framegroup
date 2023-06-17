@@ -31,6 +31,7 @@ class FrameGroup
 {
 public:
     typedef void(OnLogin_FUNC)(int code, int id);
+    typedef void(OnCaptured_FUNC)();
     typedef void(OnUpdateId_FUNC)(int captured, const std::string& object_type, uint64_t remote_id);
     typedef int(OnEffect_FUNC)(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
 
@@ -48,15 +49,22 @@ public:
 
     void AddCaptureredObjects(std::string object_type, int num_of_objects, bool commit=false);
     void AddCapturer(uint64_t remote_id, FrameCapturer* capturer);
+    void RemoveCapturer(uint64_t remote_id);
     void AddRender(uint64_t remote_id, FrameRender* render);
+    void RemoveRender(uint64_t remote_id);
+
+    // remove all but callbacks and saving file
+    void RemoveAllIDs();
 
     // Set these cbs before connection to ensure thread-safe
     void SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb);
     void SetCallBackOnLogin(std::function<OnLogin_FUNC> cb);
+    void SetCallBackOnCaptured(std::function<OnCaptured_FUNC> cb);
     void SetCallBackOnEffect(std::function<OnEffect_FUNC> cb);
 private:
     std::atomic<uint64_t> id_;
-    CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> std::shared_ptr<FrameCapturer>
+    CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> FrameCapturer*
+    CORE_MAP<uint64_t, FrameRender*> frame_renders_;//uncaptured_objects_id --> FrameRender*
 
     std::unique_ptr<FrameTimeController> time_controller_;
 
@@ -72,6 +80,7 @@ private:
 
     std::function<OnUpdateId_FUNC> OnUpdateId;
     std::function<OnLogin_FUNC> OnLogin;
+    std::function<OnCaptured_FUNC> OnCaptured;
     std::function<OnEffect_FUNC> OnEffect;
 
     acore::TaskPool save_frame_file_task_pool_;

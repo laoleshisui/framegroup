@@ -25,10 +25,12 @@ public:
     void SendIFrame();
 
     void AttachTimeController(FrameTimeController* time_controller);
+    void DetachTimeController();
 
     static acore::Recycler<acore::Task> available_tasks_;
 private:
     FrameTimeController* time_controller_;
+    FrameTimeController::Key tc_key_;
 
     std::mutex frame_mutex_;
     acore::TaskPool send_task_pool_;

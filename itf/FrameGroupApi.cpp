@@ -7,6 +7,10 @@
 void* CreateFrameGroup(){
     return new framegroup::FrameGroup();
 }
+void DeleteFrameGroup(void* group){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    delete frame_group;
+}
 void FrameGroup_Connect(void* group, char* ip, int port){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->Connect(std::string(ip), port);
@@ -40,6 +44,10 @@ void FrameGroup_AddCapturer(void* group, uint64_t remote_id, void* capturer){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     frame_group->AddCapturer(remote_id, frame_capturer);
 }
+void FrameGroup_RemoveCapturer(void* group, uint64_t remote_id){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    frame_group->RemoveCapturer(remote_id);
+}
 void FrameGroup_AddCaptureredObjects(void* group, char* object_type, int num_of_objects, int commit){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     frame_group->AddCaptureredObjects(std::string(object_type), num_of_objects, (bool)commit);
@@ -48,6 +56,18 @@ void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
     frame_group->AddRender(remote_id, frame_render);
+}
+void FrameGroup_RemoveRender(void* group, uint64_t remote_id){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    frame_group->RemoveRender(remote_id);
+}
+void FrameGroup_RemoveAllIDs(void* group){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    frame_group->RemoveAllIDs();
+}
+void FrameGroup_SetCallBack_OnCaptured(void* group, FrameGroup_OnCaptured cb){
+    framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
+    frame_group->SetCallBackOnCaptured(std::move(cb));
 }
 void FrameGroup_SetCallBack_OnLogin(void* group, FrameGroup_OnLogin cb){
     framegroup::FrameGroup* frame_group = (framegroup::FrameGroup*)group;
@@ -80,6 +100,10 @@ void FrameGroup_SetCallBack_OnEffect(void* group, FrameGroup_OnEffect cb){
 void* CreateFrameCapturer(){
     return new framegroup::FrameCapturer();
 }
+void DeleteFrameCapturer(void* capturer){
+    framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
+    delete frame_capturer;
+}
 void FrameCapturer_SetState(void* capturer, char* type, char** values, uint32_t rows){
     framegroup::FrameCapturer* frame_capturer = (framegroup::FrameCapturer*)capturer;
     std::vector<std::string> jvalues;
@@ -99,6 +123,10 @@ void FrameCapturer_AddProcess(void* capturer, char* type, char** args, uint32_t 
 
 void* CreateFrameRender(){
     return new framegroup::FrameRender();
+}
+void DeleteFrameRender(void* render){
+    framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;
+    delete frame_render;
 }
 void FrameRender_SetCallBack_OnState(void* render, uint64_t remote_id, FrameRender_OnState cb){
     framegroup::FrameRender* frame_render = (framegroup::FrameRender*)render;

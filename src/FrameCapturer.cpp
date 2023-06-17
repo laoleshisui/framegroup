@@ -7,6 +7,7 @@ acore::Recycler<acore::Task> FrameCapturer::available_tasks_ = acore::Recycler<a
 
 FrameCapturer::FrameCapturer()
 :time_controller_(nullptr),
+tc_key_(0),
 frame_mutex_(),
 send_task_pool_(1),
 frame_(std::make_unique<FrameItf>()),
@@ -45,8 +46,18 @@ void FrameCapturer::Capture(){
 
 
 void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
+    std::lock_guard<std::mutex> lg(frame_mutex_);
+    assert(!tc_key_);
     time_controller_ = time_controller;
-    time_controller_->AddRunable(std::bind(&FrameCapturer::Capture, this));
+    tc_key_ = time_controller_->AddRunable(std::bind(&FrameCapturer::Capture, this));
+}
+
+void FrameCapturer::DetachTimeController(){
+    std::lock_guard<std::mutex> lg(frame_mutex_);
+    assert(tc_key_);
+    time_controller_->RemoveRunable(tc_key_);
+    tc_key_ = 0;
+    time_controller_ = nullptr;
 }
 
 

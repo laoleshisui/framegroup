@@ -6,6 +6,11 @@
 #include "FrameTimeController.h"
 
 #include <taskqueue/time_utils.h>
+#include <acore/log/Log.h>
+
+#include <effolkronium/random.hpp>
+// get base random alias which is auto seeded and has static API and internal state
+using Random = effolkronium::random_static;
 
 using namespace framegroup;
 
@@ -63,12 +68,24 @@ void FrameTimeController::Tune(int32_t num_of_frame){
 
 void FrameTimeController::Run(){
     std::shared_lock<std::shared_mutex> sl(timer_mutex_);
-    for(std::function<void()>& runnable : runnables_){
-        runnable();
+    for(CORE_MAP<Key, std::function<void()>>::value_type& runnable : runnables_){
+        runnable.second();
     }
 }
 
-void FrameTimeController::AddRunable(std::function<void()> runnable){
+FrameTimeController::Key FrameTimeController::AddRunable(std::function<void()> runnable){
     std::unique_lock<std::shared_mutex> ul(timer_mutex_);
-    runnables_.push_back(runnable);
+    Key key = Random::get<Key>(0, UINT32_MAX);
+
+    runnables_[key] = std::move(runnable);
+    return key;
+}
+
+void FrameTimeController::RemoveRunable(Key runnable_key){
+    std::unique_lock<std::shared_mutex> ul(timer_mutex_);
+    if(runnables_.contains(runnable_key)){
+        runnables_.erase(runnable_key);
+    }else{
+        CORE_LOG(ERROR) << "Do not contain key:" << runnable_key;
+    }
 }

@@ -3,6 +3,7 @@
 
 #include "../itf/FrameGroupApi.h"
 #include <acore/log/Log.h>
+#include <acore/Type.h>
 
 
 #define IP "127.0.0.1"
@@ -26,6 +27,10 @@
             FrameCapturer_AddProcess(frame_capturer_##x, "Attack" , values, 1);\
             std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
         }\
+        DeleteFrameCapturer(frame_capturer_##x);\
+    }\
+    void cb_FrameGroup_OnCaptured_##x(){\
+        FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
     }\
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
         CORE_LOG(INFO)<< "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
@@ -33,7 +38,6 @@
             is_capturing_##x = false;\
         }else{\
             is_capturing_##x = true;\
-            FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
             FrameGroup_AddCaptureredObjects(frame_group_##x, "test_type_##x", 1, true);\
         }\
     }\
@@ -49,12 +53,16 @@
 
 #define DECLARE_RENDER(x) \
     void* frame_group_##x = CreateFrameGroup();\
+    CORE_SET<void*> frame_renders_##x;\
     void cb_OnState_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
         CORE_LOG(INFO)<<"cb_OnState_"<< remote_id << ":" << type << values[0];\
     }\
     void cb_OnProcess_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
         CORE_LOG(INFO)<<"cb_OnProcess_"<< remote_id <<":" << type << " " << values[0];\
-    }\    
+    }\
+    void cb_FrameGroup_OnCaptured_##x(){\
+        /*null*/\
+    }\
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
         CORE_LOG(INFO) << "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
         if(code != 1){\
@@ -71,12 +79,14 @@
             FrameRender_SetCallBack_OnState(frame_render, remote_id, cb_OnState_##x);\
             FrameRender_SetCallBack_OnProcess(frame_render, remote_id, cb_OnProcess_##x);\
             FrameGroup_AddRender(frame_group_##x, remote_id, frame_render);\
+            frame_renders_##x.insert(frame_render);\
         }\
     }
 
 #define DECLARE_CAPTUTER_RENDER(x) \
     void* frame_group_##x = CreateFrameGroup();\
     void* frame_capturer_##x = CreateFrameCapturer();\
+    CORE_SET<void*> frame_renders_##x;\
     std::atomic<bool> is_capturing_##x = false;\
     void thread_capture_##x(){\
         static float px = 0, py = 0;\
@@ -89,6 +99,7 @@
             FrameCapturer_AddProcess(frame_capturer_##x, "Attack" , values, 1);\
             std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
         }\
+        DeleteFrameCapturer(frame_capturer_##x);\
     }\
     void cb_OnState_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
         CORE_LOG(INFO)<<"cb_OnState_"<< remote_id << ":" << type << values[0];\
@@ -96,13 +107,15 @@
     void cb_OnProcess_##x(uint64_t remote_id, const char* type, const char** values, int rows){\
         CORE_LOG(INFO)<<"cb_OnProcess_"<< remote_id <<":" << type << " " << values[0];\
     }\
+    void cb_FrameGroup_OnCaptured_##x(){\
+        FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
+    }\
     void cb_FrameGroup_OnLogin_##x(int code, int id){\
         CORE_LOG(INFO)<< "cb_FrameGroup_OnLogin_##x:" << code << " " << id;\
         if(code != 1){\
             is_capturing_##x = false;\
         }else{\
             is_capturing_##x = true;\
-            FrameGroup_EnterRoom(frame_group_##x, ROOM_ID);\
             FrameGroup_AddCaptureredObjects(frame_group_##x, "test_type_##x", 1, true);\
         }\
     }\
@@ -117,11 +130,30 @@
             FrameRender_SetCallBack_OnState(frame_render, remote_id, cb_OnState_##x);\
             FrameRender_SetCallBack_OnProcess(frame_render, remote_id, cb_OnProcess_##x);\
             FrameGroup_AddRender(frame_group_##x, remote_id, frame_render);\
+            frame_renders_##x.insert(frame_render);\
         }\
     }
 
 #define RUN(x) \
+    FrameGroup_SetCallBack_OnCaptured(frame_group_##x, cb_FrameGroup_OnCaptured_##x);\
     FrameGroup_SetCallBack_OnLogin(frame_group_##x, cb_FrameGroup_OnLogin_##x);\
     FrameGroup_SetCallBack_OnUpdateId(frame_group_##x, cb_FrameGroup_OnUpdateId_##x);\
     FrameGroup_Connect(frame_group_##x, IP, PORT);\
     FrameGroup_Login(frame_group_##x);
+
+#define DELETE_CAPTUTER(x) \
+    is_capturing_##x = false;\
+    DeleteFrameGroup(frame_group_##x);
+
+#define DELETE_RENDER(x) \
+    DeleteFrameGroup(frame_group_##x);\
+    for(const CORE_SET<void*>::value_type& id: frame_renders_##x){\
+        DeleteFrameRender(id);\
+    }
+
+#define DELETE_CAPTUTER_RENDER(x) \
+    is_capturing_##x = false;\
+    DeleteFrameGroup(frame_group_##x);\
+    for(const CORE_SET<void*>::value_type& id: frame_renders_##x){\
+        DeleteFrameRender(id);\
+    }

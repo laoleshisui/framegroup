@@ -11,11 +11,14 @@
 #include <shared_mutex>
 
 #include <acore/utils/TaskPool.h>
+#include <acore/Type.h>
 
 namespace framegroup{
 class FrameTimeController
 {
 public:
+    typedef uint32_t Key;
+
     FrameTimeController();
 
     void SetFPS(int fps);
@@ -31,7 +34,8 @@ public:
      */
     void Tune(int32_t num_of_frame);
 
-    void AddRunable(std::function<void()> runnable);
+    Key AddRunable(std::function<void()> runnable);
+    void RemoveRunable(Key runnable_key);
 private:
     std::mutex mutex_;
     uint64_t delay_ms_;
@@ -42,7 +46,7 @@ private:
     //A Util Timer, nothing with above
     std::shared_mutex timer_mutex_;
     std::unique_ptr<acore::Timer> timer_;
-    std::vector<std::function<void()>> runnables_;
+    CORE_MAP<Key, std::function<void()>> runnables_;
     void Run();
 };
 

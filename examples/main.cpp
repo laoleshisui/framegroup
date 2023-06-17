@@ -48,5 +48,24 @@ int main(){
     RUN(E)
 
     cv.wait_for(ul, std::chrono::duration(std::chrono::milliseconds(5000)));
+
+    DELETE_CAPTUTER(a)
+    DELETE_CAPTUTER(b)
+    DELETE_CAPTUTER(c)
+    DELETE_CAPTUTER(d)
+    DELETE_CAPTUTER(e)
+
+    DELETE_RENDER(01)
+    DELETE_RENDER(02)
+    DELETE_RENDER(03)
+    DELETE_RENDER(04)
+    DELETE_RENDER(05)
+
+    DELETE_CAPTUTER_RENDER(A)
+    DELETE_CAPTUTER_RENDER(B)
+    DELETE_CAPTUTER_RENDER(C)
+    DELETE_CAPTUTER_RENDER(D)
+    DELETE_CAPTUTER_RENDER(E)
+
     CORE_LOG(INFO)<< "main() finished.";     
 }

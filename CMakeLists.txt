@@ -78,6 +78,12 @@ target_link_libraries(${PROJECT_NAME} taskqueue::taskqueue)
 # target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
 list(APPEND target_dependencies "taskqueue")
 
+#effolkronium_random
+find_package(effolkronium_random REQUIRED CONFIG)
+target_link_libraries(${PROJECT_NAME} effolkronium_random)
+# target_link_libraries(${PROJECT_NAME}_shared taskqueue::taskqueue)
+list(APPEND target_dependencies "effolkronium_random")
+
 
 # use swig to generate other language itf
 cmake_policy(SET CMP0078 NEW)

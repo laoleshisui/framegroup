@@ -16,6 +16,7 @@ objects_id_mutex_(),
 client_(6),
 OnUpdateId(nullptr),
 OnLogin(nullptr),
+OnCaptured(nullptr),
 OnEffect(nullptr),
 save_frame_file_task_pool_(1),
 save_frame_file_(NULL)
@@ -29,6 +30,7 @@ save_frame_file_(NULL)
 
 FrameGroup::~FrameGroup()
 {
+    RemoveAllIDs();
     if(save_frame_file_){
         fflush(save_frame_file_);
         fclose(save_frame_file_);
@@ -114,14 +116,63 @@ void FrameGroup::AddCaptureredObjects(std::string object_type, int num_of_object
 
 void FrameGroup::AddCapturer(uint64_t remote_id, FrameCapturer* capturer){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    if(frame_capturers_.contains(remote_id)){
+        CORE_LOG(ERROR) << "frame_capturers_ has already contianed id:" << remote_id;
+        assert(0);
+    }
     capturer->AddSink(frame_objects_[remote_id].get());
     frame_capturers_[remote_id] = capturer;
     capturer->AttachTimeController(time_controller_.get());
 }
 
+void FrameGroup::RemoveCapturer(uint64_t remote_id){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    if(!frame_capturers_.contains(remote_id)){
+        CORE_LOG(ERROR) << "frame_capturers_ does not contian id:" << remote_id;
+        return;
+    }
+    FrameCapturer* capturer = frame_capturers_[remote_id];
+    capturer->DetachTimeController();
+    capturer->RemoveSink(frame_objects_[remote_id].get());
+    frame_capturers_.erase(remote_id);
+}
+
 void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    if(frame_renders_.contains(remote_id)){
+        CORE_LOG(ERROR) << "frame_renders_ has already contianed id:" << remote_id;
+        assert(0);
+    }
     frame_objects_[remote_id]->AddSink(render);
+    frame_renders_[remote_id] = render;
+}
+
+void FrameGroup::RemoveRender(uint64_t remote_id){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    if(!frame_renders_.contains(remote_id)){
+        CORE_LOG(ERROR) << "frame_renders_ does not contianed id:" << remote_id;
+        assert(0);
+    }
+    FrameRender* render = frame_renders_[remote_id];
+    frame_objects_[remote_id]->RemoveSink(render);
+    frame_renders_.erase(remote_id);
+}
+
+void FrameGroup::RemoveAllIDs(){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+
+    //remove all capturers id
+    for(const uint64_t& id : captured_objects_id_){
+        RemoveCapturer(id);
+    }
+    //remove all renders id
+    for(const uint64_t& id : uncaptured_objects_id_){
+        RemoveRender(id);
+    }
+    //remove all objects
+    frame_objects_.clear();
+    captured_objects_id_.clear();
+    uncaptured_objects_id_.clear();
 }
 
 void FrameGroup::InitCapturedFrameObjects(){
@@ -207,7 +258,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         pframe::Event event;
         event.ParseFromArray(data, *len);
 
-        CORE_LOG(INFO) << event.code()<< " "  << event.id();
+        CORE_LOG(INFO) << "event code:"<< event.code()<< " id:"  << event.id();
         
         if(event.code() == pframe::EventCode::LOGIN_SUCCEED){
             std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
@@ -224,22 +275,22 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             pframe::RegisterObjects registered_objects;
             registered_objects.ParseFromString(event.data());
 
+            std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+            if(OnCaptured){
+                OnCaptured();
+            }
             int ids_idx = 0;
             for(int i = 0; i < registered_objects.nums_of_objects_size(); ++i){
                 int num = registered_objects.nums_of_objects(i);
                 std::string type = registered_objects.object_types(i);
-                
-                {
-                    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-                    for(int j = 0; j < num; ++j){
-                        uint64_t remote_id = registered_objects.ids(ids_idx + j);
+                for(int j = 0; j < num; ++j){
+                    uint64_t remote_id = registered_objects.ids(ids_idx + j);
 
-                        frame_objects_[remote_id] = std::make_unique<FrameObject>();
-                        frame_objects_[remote_id]->id_ = remote_id;
-                        captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
+                    frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                    frame_objects_[remote_id]->id_ = remote_id;
+                    captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
 
-                        OnUpdateId(1, type, remote_id);
-                    }
+                    OnUpdateId(1, type, remote_id);
                 }
                 ids_idx += num;
             }
@@ -250,22 +301,20 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             pframe::RegisterObjects registered_objects;
             registered_objects.ParseFromString(std::move(event.data()));
 
+            std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
             int ids_idx = 0;
             for(int i = 0; i < registered_objects.object_types_size(); ++i){
                 int num = registered_objects.nums_of_objects(i);
                 std::string type = registered_objects.object_types(i);
                 
-                {
-                    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-                    for(int j = 0; j < num; ++j){
-                        uint64_t remote_id = registered_objects.ids(ids_idx + j);
+                for(int j = 0; j < num; ++j){
+                    uint64_t remote_id = registered_objects.ids(ids_idx + j);
 
-                        frame_objects_[remote_id] = std::make_unique<FrameObject>();
-                        frame_objects_[remote_id]->id_ = remote_id;
-                        uncaptured_objects_id_.insert(remote_id);//atfer FrameObject being created!
+                    frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                    frame_objects_[remote_id]->id_ = remote_id;
+                    uncaptured_objects_id_.insert(remote_id);//atfer FrameObject being created!
 
-                        OnUpdateId(0, type, remote_id);
-                    }
+                    OnUpdateId(0, type, remote_id);
                 }
                 ids_idx += num;
             }
@@ -370,6 +419,10 @@ void FrameGroup::SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb){
 void FrameGroup::SetCallBackOnLogin(std::function<OnLogin_FUNC> cb){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     OnLogin = cb;
+}
+void FrameGroup::SetCallBackOnCaptured(std::function<OnCaptured_FUNC> cb){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    OnCaptured = cb;
 }
 void FrameGroup::SetCallBackOnEffect(std::function<OnEffect_FUNC> cb){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
