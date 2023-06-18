@@ -1,6 +1,7 @@
 build_linux/
 build_android/
 build/
+build_*/
 **/.DS_Store
 itf/csharp/
 itf/swig/*_wrap.c
