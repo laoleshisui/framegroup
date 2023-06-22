@@ -63,6 +63,7 @@ public:
     void SetCallBackOnEffect(std::function<OnEffect_FUNC> cb);
 private:
     std::atomic<uint64_t> id_;
+    uint64_t room_id_;
     CORE_MAP<uint64_t, FrameCapturer*> frame_capturers_;//captured_objects_id --> FrameCapturer*
     CORE_MAP<uint64_t, FrameRender*> frame_renders_;//uncaptured_objects_id --> FrameRender*
 

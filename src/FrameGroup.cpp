@@ -11,6 +11,7 @@ using namespace framegroup;
 
 FrameGroup::FrameGroup()
 :id_(0),
+room_id_(0),
 time_controller_(std::make_unique<FrameTimeController>()),
 objects_id_mutex_(),
 client_(6),
@@ -333,6 +334,12 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
                     time_controller_->Start(server_idx);
                 }
             }
+        }
+        else if(event.code() == pframe::EventCode::ENTER_ROOM_SUCCEED){
+            room_id_ = event.id();;
+        }
+        else if(event.code() == pframe::EventCode::EXIT_ROOM_SUCCEED){
+            room_id_ = 0;
         }
     }
 }
