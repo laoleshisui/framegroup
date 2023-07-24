@@ -30,6 +30,7 @@ class FrameObject;
 class FrameGroup
 {
 public:
+    typedef void(OnConn_FUNC)(int succeed);
     typedef void(OnLogin_FUNC)(int code, int id);
     typedef void(OnCaptured_FUNC)();
     typedef void(OnUpdateId_FUNC)(int captured, const std::string& object_type, uint64_t remote_id);
@@ -57,6 +58,7 @@ public:
     void RemoveAllIDs();
 
     // Set these cbs before connection to ensure thread-safe
+    void SetCallBackOnConn(std::function<OnConn_FUNC> cb);
     void SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb);
     void SetCallBackOnLogin(std::function<OnLogin_FUNC> cb);
     void SetCallBackOnCaptured(std::function<OnCaptured_FUNC> cb);
@@ -79,6 +81,7 @@ private:
     acore::Client client_;
     std::thread client_loop_;
 
+    std::function<OnConn_FUNC> OnConn;
     std::function<OnUpdateId_FUNC> OnUpdateId;
     std::function<OnLogin_FUNC> OnLogin;
     std::function<OnCaptured_FUNC> OnCaptured;

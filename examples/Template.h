@@ -6,8 +6,8 @@
 #include <acore/Type.h>
 
 
-#define IP "127.0.0.1"
-// #define IP "1.15.134.166"
+// #define IP "127.0.0.1"
+#define IP "1.15.134.166"
 #define PORT 10002
 #define ROOM_ID 1
 #define CAPTURE_DELAY_MS 16
@@ -49,6 +49,10 @@
             capturer_thread_##x.detach();\
         }else{\
         }\
+    }\
+    void cb_FrameGroup_OnConn_##x(int succeed){\
+        CORE_LOG(INFO)<< "cb_FrameGroup_OnConn_" << #x << ": " << succeed;\
+        FrameGroup_Login(frame_group_##x);\
     }
 
 #define DECLARE_RENDER(x) \
@@ -81,6 +85,10 @@
             FrameGroup_AddRender(frame_group_##x, remote_id, frame_render);\
             frame_renders_##x.insert(frame_render);\
         }\
+    }\
+    void cb_FrameGroup_OnConn_##x(int succeed){\
+        CORE_LOG(INFO)<< "cb_FrameGroup_OnConn_" << #x << ": " << succeed;\
+        FrameGroup_Login(frame_group_##x);\
     }
 
 #define DECLARE_CAPTUTER_RENDER(x) \
@@ -132,14 +140,18 @@
             FrameGroup_AddRender(frame_group_##x, remote_id, frame_render);\
             frame_renders_##x.insert(frame_render);\
         }\
+    }\
+    void cb_FrameGroup_OnConn_##x(int succeed){\
+        CORE_LOG(INFO)<< "cb_FrameGroup_OnConn_" << #x << ": " << succeed;\
+        FrameGroup_Login(frame_group_##x);\
     }
 
 #define RUN(x) \
     FrameGroup_SetCallBack_OnCaptured(frame_group_##x, cb_FrameGroup_OnCaptured_##x);\
     FrameGroup_SetCallBack_OnLogin(frame_group_##x, cb_FrameGroup_OnLogin_##x);\
     FrameGroup_SetCallBack_OnUpdateId(frame_group_##x, cb_FrameGroup_OnUpdateId_##x);\
-    FrameGroup_Connect(frame_group_##x, IP, PORT);\
-    FrameGroup_Login(frame_group_##x);
+    FrameGroup_SetCallBack_OnConn(frame_group_##x, cb_FrameGroup_OnConn_##x);\
+    FrameGroup_Connect(frame_group_##x, IP, PORT);
 
 #define DELETE_CAPTUTER(x) \
     is_capturing_##x = false;\

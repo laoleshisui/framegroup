@@ -344,7 +344,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
     }
 }
 void FrameGroup::EventCB(acore::Server::Client* client, const short event){
-
+    OnConn(int(event & BEV_EVENT_CONNECTED));
 }
 
 
@@ -420,6 +420,10 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
     }
 }
 
+void FrameGroup::SetCallBackOnConn(std::function<OnConn_FUNC> cb){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    OnConn = cb;
+}
 void FrameGroup::SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     OnUpdateId = cb;

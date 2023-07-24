@@ -12,6 +12,7 @@
 extern "C"{
 #endif
 
+typedef void(*FrameGroup_OnConn)(int succeed);
 typedef void(*FrameGroup_OnLogin)(int code, int id);
 typedef void(*FrameGroup_OnCaptured)();
 typedef void(*FrameGroup_OnUpdateId)(int captured, const char* object_type, uint64_t remote_id);
@@ -34,6 +35,7 @@ extern void FrameGroup_AddCaptureredObjects(void* group, char* object_type, int 
 extern void FrameGroup_AddRender(void* group, uint64_t remote_id, void* render);
 extern void FrameGroup_RemoveRender(void* group, uint64_t remote_id);
 extern void FrameGroup_RemoveAllIDs(void* group);
+extern void FrameGroup_SetCallBack_OnConn(void* group, FrameGroup_OnConn cb);
 extern void FrameGroup_SetCallBack_OnCaptured(void* group, FrameGroup_OnCaptured cb);
 extern void FrameGroup_SetCallBack_OnLogin(void* group, FrameGroup_OnLogin cb);
 extern void FrameGroup_SetCallBack_OnUpdateId(void* group, FrameGroup_OnUpdateId cb);
