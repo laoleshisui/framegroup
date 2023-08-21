@@ -19,8 +19,16 @@ include_directories(
 )
 
 set(SRC
-    itf/FrameGroupApi.h
-    itf/FrameGroupApi.cpp
+    # itf/FrameGroupApi.h
+    # itf/FrameGroupApi.cpp
+
+    #api
+    src/api/FrameRenderApi.h
+    src/api/FrameRenderApi.cpp
+    src/api/FrameCapturerApi.h
+    src/api/FrameCapturerApi.cpp
+    src/api/FrameGroupApi.h
+    src/api/FrameGroupApi.cpp
 
     src/FrameCapturer.h
     src/FrameCapturer.cpp
@@ -41,16 +49,20 @@ set(SRC
     src/FrameTimeController.cpp
 )
 set(API_INCLUDE
-    src/FrameCapturer.h
-    src/FrameGroup.h
-    src/FrameItf.h
-    src/PacketItf.h
-    src/FrameRender.h
-    src/FrameSinkItf.h
-    src/PacketSinkItf.h
+    # src/FrameCapturer.h
+    # src/FrameGroup.h
+    # src/FrameItf.h
+    # src/PacketItf.h
+    # src/FrameRender.h
+    # src/FrameSinkItf.h
+    # src/PacketSinkItf.h
+
+    src/api/FrameRenderApi.h
+    src/api/FrameCapturerApi.h
+    src/api/FrameGroupApi.h
 )
 set(API_C_ITF
-    itf/FrameGroupApi.h
+    # itf/FrameGroupApi.h
 )
 
 add_library(
@@ -92,17 +104,18 @@ include(${SWIG_USE_FILE})
 set(CMAKE_SWIG_FLAGS "")
 SET_SOURCE_FILES_PROPERTIES(${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i 
   PROPERTIES
-  INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/itf
+  INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}
   OUTFILE_DIR ${CMAKE_SOURCE_DIR}/itf/swig/
   COMPILE_OPTIONS "-namespace"
   SWIG_FLAGS ${PROJECT_NAME}#specified namespace
+  CPLUSPLUS ON
   )
 swig_add_library(${PROJECT_NAME}_api
   TYPE SHARED 
   LANGUAGE csharp
   OUTPUT_DIR ${CMAKE_SOURCE_DIR}/itf/csharp/ 
   SOURCES ${CMAKE_SOURCE_DIR}/itf/swig/FrameGroupApi.i)
-set_property(TARGET ${PROJECT_NAME}_api PROPERTY SWIG_COMPILE_DEFINITIONS SWIG_CSHARP_NO_EXCEPTION_HELPER SWIG_CSHARP_NO_STRING_HELPER)
+set_property(TARGET ${PROJECT_NAME}_api PROPERTY SWIG_COMPILE_DEFINITIONS)
 target_link_libraries(${PROJECT_NAME}_api ${PROJECT_NAME})
 
 add_executable(main
@@ -121,7 +134,7 @@ target_include_directories(${PROJECT_NAME}
   "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 # fill include and lib
-install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_api main
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_api
   # ${PROJECT_NAME}_shared
   EXPORT ${PROJECT_NAME}Targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib

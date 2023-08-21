@@ -15,12 +15,10 @@ room_id_(0),
 time_controller_(std::make_unique<FrameTimeController>()),
 objects_id_mutex_(),
 client_(6),
-OnUpdateId(nullptr),
-OnLogin(nullptr),
-OnCaptured(nullptr),
-OnEffect(nullptr),
 save_frame_file_task_pool_(1),
-save_frame_file_(NULL)
+save_frame_file_(NULL),
+enable_effect_caculate_(false),
+observers_()
 {
     
     acore::Server::MSG_FUNC recv_cb = std::bind(&FrameGroup::RecvCB, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -87,6 +85,11 @@ void FrameGroup::ExitRoom(uint64_t room_id){
 void FrameGroup::SetSaveFrameFilePath(std::string file_path){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     save_frame_file_ = fopen(file_path.c_str(), "wb+");
+}
+
+void FrameGroup::EnableEffectCaculate(bool enabled){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    enable_effect_caculate_ = enabled;
 }
 
 void FrameGroup::AddCaptureredObjects(std::string object_type, int num_of_objects, bool commit){
@@ -175,6 +178,11 @@ void FrameGroup::RemoveAllIDs(){
     frame_objects_.clear();
     captured_objects_id_.clear();
     uncaptured_objects_id_.clear();
+}
+
+void FrameGroup::AddObserver(FrameGroupObserver* observer){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    observers_.push_back(observer);
 }
 
 void FrameGroup::InitCapturedFrameObjects(){
@@ -278,9 +286,8 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             registered_objects.ParseFromString(event.data());
 
             std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-            if(OnCaptured){
-                OnCaptured();
-            }
+            OnCaptured();
+
             int ids_idx = 0;
             for(int i = 0; i < registered_objects.nums_of_objects_size(); ++i){
                 int num = registered_objects.nums_of_objects(i);
@@ -347,10 +354,14 @@ void FrameGroup::EventCB(acore::Server::Client* client, const short event){
     OnConn(int(event & BEV_EVENT_CONNECTED));
 }
 
+void EnableEffectCaculate(bool enabled){
+
+}
 
 void FrameGroup::EffectCaculate(uint64_t object_id){
-    if(!OnEffect) return;
-
+    if(!enable_effect_caculate_){
+        return;
+    }
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
     std::shared_lock<std::shared_mutex> lock_object_id(frame_objects_[object_id]->frames_mutex_);
 
@@ -407,36 +418,39 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
 
         //effect now!
         //Attach effect in the nearest Frame
-        if(OnEffect){
-            for(Process& i : decider_frame->processes_){
-                for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
-                    int ret = OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
-                    if(ret){
-                        effected_ids.insert(other->id_);
-                    }
+        for(Process& i : decider_frame->processes_){
+            for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
+                int ret = OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
+                if(ret){
+                    effected_ids.insert(other->id_);
                 }
             }
         }
     }
 }
 
-void FrameGroup::SetCallBackOnConn(std::function<OnConn_FUNC> cb){
-    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-    OnConn = cb;
+void FrameGroup::OnConn(int succeed){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnConn(succeed);
+    }
 }
-void FrameGroup::SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb){
-    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-    OnUpdateId = cb;
+void FrameGroup::OnLogin(int code, int id){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnLogin(code, id);
+    }
 }
-void FrameGroup::SetCallBackOnLogin(std::function<OnLogin_FUNC> cb){
-    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-    OnLogin = cb;
+void FrameGroup::OnCaptured(){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnCaptured();
+    }
 }
-void FrameGroup::SetCallBackOnCaptured(std::function<OnCaptured_FUNC> cb){
-    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-    OnCaptured = cb;
+void FrameGroup::OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnUpdateId(captured, object_type, remote_id);
+    }
 }
-void FrameGroup::SetCallBackOnEffect(std::function<OnEffect_FUNC> cb){
-    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-    OnEffect = cb;
+int FrameGroup::OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnEffect(decider_remote_id, process_type, args, other_remote_id, state_type, values);
+    }
 }

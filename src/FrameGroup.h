@@ -18,6 +18,8 @@
 #include "FrameRender.h"
 #include "PacketItf.h"
 
+#include "api/FrameGroupApi.h"
+
 
 namespace framegroup{
 
@@ -27,15 +29,9 @@ class FrameObject;
  * Multi clients support multicast by server;
  * Just two client had better support p2p.
 */
-class FrameGroup
+class FrameGroup : public FrameGroupObserver
 {
 public:
-    typedef void(OnConn_FUNC)(int succeed);
-    typedef void(OnLogin_FUNC)(int code, int id);
-    typedef void(OnCaptured_FUNC)();
-    typedef void(OnUpdateId_FUNC)(int captured, const std::string& object_type, uint64_t remote_id);
-    typedef int(OnEffect_FUNC)(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
-
     FrameGroup();
     ~FrameGroup();
 
@@ -47,6 +43,7 @@ public:
     void ExitRoom(uint64_t room_id = 0);
     
     void SetSaveFrameFilePath(std::string file_path);
+    void EnableEffectCaculate(bool enabled = false);
 
     void AddCaptureredObjects(std::string object_type, int num_of_objects, bool commit=false);
     void AddCapturer(uint64_t remote_id, FrameCapturer* capturer);
@@ -58,11 +55,7 @@ public:
     void RemoveAllIDs();
 
     // Set these cbs before connection to ensure thread-safe
-    void SetCallBackOnConn(std::function<OnConn_FUNC> cb);
-    void SetCallBackOnUpdateId(std::function<OnUpdateId_FUNC> cb);
-    void SetCallBackOnLogin(std::function<OnLogin_FUNC> cb);
-    void SetCallBackOnCaptured(std::function<OnCaptured_FUNC> cb);
-    void SetCallBackOnEffect(std::function<OnEffect_FUNC> cb);
+    virtual void AddObserver(FrameGroupObserver* observer);
 private:
     std::atomic<uint64_t> id_;
     uint64_t room_id_;
@@ -81,14 +74,10 @@ private:
     acore::Client client_;
     std::thread client_loop_;
 
-    std::function<OnConn_FUNC> OnConn;
-    std::function<OnUpdateId_FUNC> OnUpdateId;
-    std::function<OnLogin_FUNC> OnLogin;
-    std::function<OnCaptured_FUNC> OnCaptured;
-    std::function<OnEffect_FUNC> OnEffect;
-
     acore::TaskPool save_frame_file_task_pool_;
     FILE* save_frame_file_;
+    bool enable_effect_caculate_;
+    std::vector<FrameGroupObserver*> observers_;
 
     // All data is received, will start soon;
     // Maybe a signal from server to start.
@@ -109,6 +98,13 @@ private:
     // 2. When a remote frame received.
     // The effects on captured object will become effective in the nearest frame;
     void EffectCaculate(uint64_t object_id);
+
+
+    virtual void OnConn(int succeed);
+    virtual void OnLogin(int code, int id);
+    virtual void OnCaptured();
+    virtual void OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id);
+    virtual int OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
 };
 }
 #endif

@@ -1,6 +1,9 @@
 #include "FrameCapturer.h"
 
 #include <taskqueue/time_utils.h>
+
+#include <acore/log/Log.h>
+
 using namespace framegroup;
 
 acore::Recycler<acore::Task> FrameCapturer::available_tasks_ = acore::Recycler<acore::Task>();
@@ -46,7 +49,9 @@ void FrameCapturer::Capture(){
 
 
 void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
+    CORE_LOG(INFO) << "AttachTimeController";
     std::lock_guard<std::mutex> lg(frame_mutex_);
+    CORE_LOG(INFO) << "AttachTimeController";
     assert(!tc_key_);
     time_controller_ = time_controller;
     tc_key_ = time_controller_->AddRunable(std::bind(&FrameCapturer::Capture, this));

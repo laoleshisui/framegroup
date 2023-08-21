@@ -19,8 +19,8 @@ public:
     FrameCapturer();
     ~FrameCapturer();
 
-    void SetState(std::string type, std::vector<std::string> values);
-    void AddProcess(std::string type, std::vector<std::string> args);
+    virtual void SetState(std::string type, std::vector<std::string> values);
+    virtual void AddProcess(std::string type, std::vector<std::string> args);
 
     void SendIFrame();
 
