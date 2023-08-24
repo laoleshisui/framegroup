@@ -128,7 +128,7 @@ namespace{\
             CORE_LOG(INFO) << "OnConn:" << succeed;\
             group##x->Login();\
         }\
-        virtual void OnLogin(int code, int id){\
+        virtual void OnLogin(int code, uint64_t id){\
             CORE_LOG(INFO) << "OnLogin:" << code <<" " << id;\
             if(code != 1){\
                 is_capturing_##x = false;\
