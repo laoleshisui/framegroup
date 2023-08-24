@@ -14,6 +14,7 @@ class FrameGroupObserver{
 public:
     virtual void OnConn(int succeed){}
     virtual void OnLogin(int code, uint64_t id){}
+    virtual void OnEnterRoom(int succeed, uint64_t room_id){}
     virtual void OnCaptured(){}
     virtual void OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id){}
     virtual int OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){}
