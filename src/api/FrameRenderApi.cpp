@@ -11,7 +11,10 @@ namespace {
 class PIMPL : public acore::Api::PImplItf{
 public:
     PIMPL()
-    :render_(std::make_unique<framegroup::FrameRender>())
+    :PIMPL(0)
+    {}
+    PIMPL(u_int64_t id)
+    :render_(std::make_unique<framegroup::FrameRender>(id))
     {}
     virtual ~PIMPL(){}
     std::unique_ptr<framegroup::FrameRender> render_;
@@ -21,9 +24,13 @@ public:
 using namespace framegroup;
 
 FrameRenderApi::FrameRenderApi()
-{
-    pimpl_ = std::make_unique<PIMPL>();
+:FrameRenderApi(0)
+{}
+
+FrameRenderApi::FrameRenderApi(u_int64_t id){
+    pimpl_ = std::make_unique<PIMPL>(id);
 }
+
 FrameRenderApi::~FrameRenderApi(){}
 
 void* FrameRenderApi::Get(){

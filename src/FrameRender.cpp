@@ -5,19 +5,33 @@
 using namespace framegroup;
 
 FrameRender::FrameRender()
-:cb_mutex_(),
-observers_()
+:FrameRender(0)
 {}
+
+FrameRender::FrameRender(u_int64_t id)
+:cb_mutex_(),
+observers_(),
+id_(id)
+{}
+
 FrameRender::~FrameRender(){}
 
 void FrameRender::Render(std::shared_ptr<FrameItf> frame){
     std::shared_lock<std::shared_mutex> sl(cb_mutex_);
     for(FrameRenderObserver* observer : observers_){
         for(CORE_MAP<std::string, std::vector<std::string>>::value_type& i : frame->states_){
-            observer->OnState(i.first, i.second);
+            if(id_){
+                observer->OnState(id_, i.first, i.second);
+            }else{
+                observer->OnState(i.first, i.second);
+            }
         }
         for(Process& i : frame->processes_){
-            observer->OnProcess(i.type_, i.args_);
+            if(id_){
+                observer->OnProcess(id_, i.type_, i.args_);
+            }else{
+                observer->OnProcess(i.type_, i.args_);
+            }
         }
     }
 }

@@ -16,6 +16,7 @@ class FrameRender : public FrameSinkItf
 {
 public:
     FrameRender();
+    FrameRender(u_int64_t id);
     ~FrameRender();
     
     virtual void Render(std::shared_ptr<FrameItf> frame);
@@ -25,6 +26,7 @@ public:
 private:
     std::shared_mutex cb_mutex_;
     std::vector<FrameRenderObserver*> observers_;
+    uint64_t id_;
 };
 
 }
