@@ -16,7 +16,7 @@ class FrameRender : public FrameSinkItf
 {
 public:
     FrameRender();
-    FrameRender(u_int64_t id);
+    FrameRender(uint64_t id);
     ~FrameRender();
     
     virtual void Render(std::shared_ptr<FrameItf> frame);

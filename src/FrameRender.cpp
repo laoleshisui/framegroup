@@ -8,7 +8,7 @@ FrameRender::FrameRender()
 :FrameRender(0)
 {}
 
-FrameRender::FrameRender(u_int64_t id)
+FrameRender::FrameRender(uint64_t id)
 :cb_mutex_(),
 observers_(),
 id_(id)

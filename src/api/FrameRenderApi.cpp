@@ -13,7 +13,7 @@ public:
     PIMPL()
     :PIMPL(0)
     {}
-    PIMPL(u_int64_t id)
+    PIMPL(uint64_t id)
     :render_(std::make_unique<framegroup::FrameRender>(id))
     {}
     virtual ~PIMPL(){}
@@ -27,7 +27,7 @@ FrameRenderApi::FrameRenderApi()
 :FrameRenderApi(0)
 {}
 
-FrameRenderApi::FrameRenderApi(u_int64_t id){
+FrameRenderApi::FrameRenderApi(uint64_t id){
     pimpl_ = std::make_unique<PIMPL>(id);
 }
 
