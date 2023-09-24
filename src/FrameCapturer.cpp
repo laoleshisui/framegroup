@@ -16,15 +16,17 @@ send_task_pool_(1),
 frame_(std::make_unique<FrameItf>()),
 has_update_(false)
 {
+    CORE_LOG(INFO) << "new FrameCapturer:" << this;
 }
 FrameCapturer::~FrameCapturer(){}
 
 void FrameCapturer::Capture(){
+    CORE_LOG(INFO) << " FrameCapturer Capture:" << this;
     std::lock_guard<std::mutex> lg(frame_mutex_);
     if(!has_update_){
         return;
     }
-
+    CORE_LOG(INFO) << " FrameCapturer Capture:" << this;
     if(!time_controller_ || !time_controller_->UpdateFrameIdx(frame_->idx_)){
         return;
     }
@@ -51,14 +53,16 @@ void FrameCapturer::Capture(){
 void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
     CORE_LOG(INFO) << "AttachTimeController";
     std::lock_guard<std::mutex> lg(frame_mutex_);
-    CORE_LOG(INFO) << "AttachTimeController";
     assert(!tc_key_);
     time_controller_ = time_controller;
     tc_key_ = time_controller_->AddRunable(std::bind(&FrameCapturer::Capture, this));
+    CORE_LOG(INFO) << "tc_key_: " << tc_key_;
 }
 
 void FrameCapturer::DetachTimeController(){
+    CORE_LOG(INFO) << "DetachTimeController";
     std::lock_guard<std::mutex> lg(frame_mutex_);
+    CORE_LOG(INFO) << "tc_key_: " << tc_key_;
     assert(tc_key_);
     time_controller_->RemoveRunable(tc_key_);
     tc_key_ = 0;
@@ -71,6 +75,7 @@ void FrameCapturer::SetState(std::string type, std::vector<std::string> values){
     frame_->states_[type] = std::move(values);
 }
 void FrameCapturer::AddProcess(std::string type, std::vector<std::string> args){
+    CORE_LOG(INFO) << "AddProcess:" << type;
     std::lock_guard<std::mutex> lg(frame_mutex_);
     frame_->processes_.emplace_back();
     frame_->processes_.back().type_ = std::move(type);

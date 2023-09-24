@@ -31,14 +31,17 @@ void FrameTimeController::SetFPS(int fps){
 }
 
 void FrameTimeController::Start(uint64_t first_frame_idx){
+    std::lock_guard<std::mutex> lg(mutex_);
     first_frame_time_ = taskqueue::TimeMillis();
     first_frame_idx_ = first_frame_idx;
 }
 
 bool FrameTimeController::IsStarted(){
+    std::lock_guard<std::mutex> lg(mutex_);
     return first_frame_time_ != 0;
 }
 void FrameTimeController::Reset(){
+    std::lock_guard<std::mutex> lg(mutex_);
     first_frame_time_ = 0;
     first_frame_idx_ = 0;
 }
@@ -78,6 +81,7 @@ FrameTimeController::Key FrameTimeController::AddRunable(std::function<void()> r
     Key key = Random::get<Key>(0, UINT32_MAX);
 
     runnables_[key] = std::move(runnable);
+    CORE_LOG(INFO) << "AddRunable succeed, key:" << key << ", number of runnables: " << runnables_.size();
     return key;
 }
 
@@ -88,4 +92,5 @@ void FrameTimeController::RemoveRunable(Key runnable_key){
     }else{
         CORE_LOG(ERROR) << "Do not contain key:" << runnable_key;
     }
+    CORE_LOG(INFO) << "RemoveRunable succeed, key:" << runnable_key << ", number of runnables: " << runnables_.size();
 }

@@ -58,7 +58,7 @@ void FrameGroup::Login(){
     client_.Send(client_.client_bev_, login.SerializeAsString());
 }
 void FrameGroup::Logout(){
-    if(id_) return;
+    if(!id_) return;
     pframe::Type logout;
     logout.set_proto_type(pframe::ProtoType::LOGOUT);
     client_.Send(client_.client_bev_, logout.SerializeAsString());
@@ -178,6 +178,8 @@ void FrameGroup::RemoveAllIDs(){
     frame_objects_.clear();
     captured_objects_id_.clear();
     uncaptured_objects_id_.clear();
+
+    time_controller_->Reset();
 }
 
 void FrameGroup::AddObserver(FrameGroupObserver* observer){
@@ -239,7 +241,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
     pframe::Relay relay;
     relay.ParseFromArray(data, *len);
 
-    // CORE_LOG(INFO) << relay.proto_type();
+    CORE_LOG(INFO) << relay.proto_type();
     if(relay.proto_type() == pframe::ProtoType::FRAME){
         pframe::Frame frame;
         frame.ParseFromArray(data, *len);
@@ -331,7 +333,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         else if(event.code() == pframe::EventCode::FRAME_IDX_SYNC){
             uint64_t client_idx = event.id();
             uint64_t server_idx = event.target_id();
-            CORE_LOG(INFO) << "FRAME_IDX_SYNC:" << server_idx << " " <<client_idx;
+            CORE_LOG(INFO) << "FRAME_IDX_SYNC:" << server_idx << " " << client_idx << " " << time_controller_->IsStarted();
             {
                 std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
                 if(time_controller_->IsStarted()){
