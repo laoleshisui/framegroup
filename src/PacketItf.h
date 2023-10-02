@@ -15,14 +15,17 @@ class PacketItf
 {
 public:
     void ToProto(pframe::Frame& pframe){
+        pframe.set_frame_type(type_);
         pframe.set_idx(idx_);
         pframe.set_data(std::move(data_));
     }
     void ParseFrom(const pframe::Frame& pframe){
+        type_ = pframe.frame_type();
         idx_ = pframe.idx();
         data_ = std::move(pframe.data());
     }
 
+    pframe::Frametype type_;
     uint64_t idx_;
     std::string data_;
 };

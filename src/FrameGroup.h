@@ -50,6 +50,7 @@ public:
     void RemoveCapturer(uint64_t remote_id);
     void AddRender(uint64_t remote_id, FrameRender* render);
     void RemoveRender(uint64_t remote_id);
+    void SyncIFrames(uint64_t remote_id);
 
     // remove all but callbacks and saving file
     void RemoveAllIDs();
@@ -105,6 +106,7 @@ private:
     virtual void OnEnterRoom(int succeed, uint64_t room_id);
     virtual void OnCaptured();
     virtual void OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id);
+    virtual void OnSyncIFrame(int captured, int succeed, uint64_t remote_id);
     virtual int OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values);
 };
 }

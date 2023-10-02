@@ -35,7 +35,13 @@ void FrameCapturer::Capture(){
     std::shared_ptr<acore::Recycler<acore::Task>::Recyclable> task = std::shared_ptr<acore::Recycler<acore::Task>::Recyclable>(available_tasks_.Request());
     
     std::shared_ptr<FrameItf> frame_copy = std::make_shared<FrameItf>(*(frame_.get()));
-    frame_->processes_.clear();
+    if(frame_->type_ == pframe::Frametype::I){
+        frame_->type_ = pframe::Frametype::P;
+    }else{
+        //P frame
+        frame_->processes_.clear();
+    }
+
     (*task)->run_ = [=, this]{
         RunOnEverySink([=](FrameSinkItf* sink){
             sink->OnFrame(frame_copy);
@@ -43,9 +49,6 @@ void FrameCapturer::Capture(){
     };
     send_task_pool_.PostTask((*task));
 
-    if(frame_->type_ == pframe::Frametype::I){
-        frame_->type_ = pframe::Frametype::P;
-    }
     has_update_ = false;
 }
 

@@ -163,6 +163,20 @@ void FrameGroup::RemoveRender(uint64_t remote_id){
     frame_renders_.erase(remote_id);
 }
 
+void FrameGroup::SyncIFrames(uint64_t remote_id){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    if(!frame_renders_.contains(remote_id)){
+        CORE_LOG(WARNING) << "frame_renders_ does not contianed id:" << remote_id;
+        CORE_LOG(WARNING) << "RequireIFrame return";
+        return;
+    }
+    pframe::SyncIFrames sync_iframes;
+    sync_iframes.set_proto_type(pframe::ProtoType::SYNCIFRAMES);
+    sync_iframes.set_object_id(remote_id);//0 is all members's iframe in the room
+
+    client_.Send(client_.client_bev_, sync_iframes.SerializeAsString());
+}
+
 void FrameGroup::RemoveAllIDs(){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
 
@@ -352,14 +366,16 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             room_id_ = 0;
             OnEnterRoom(0, room_id_);
         }
+        else if(event.code() == pframe::EventCode::SYNCIFRAMES_SUCCEED){
+            OnSyncIFrame(captured_objects_id_.contains(event.id()), 1, event.id());
+        }
+        else if(event.code() == pframe::EventCode::SYNCIFRAMES_FAILED){
+            OnSyncIFrame(captured_objects_id_.contains(event.id()), 0, event.id());
+        }
     }
 }
 void FrameGroup::EventCB(acore::Server::Client* client, const short event){
     OnConn(int(event & BEV_EVENT_CONNECTED));
-}
-
-void EnableEffectCaculate(bool enabled){
-
 }
 
 void FrameGroup::EffectCaculate(uint64_t object_id){
@@ -414,6 +430,9 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
     {
         std::lock_guard<std::mutex> lg_decider(decider->effected_mutex_);
         std::lock_guard<std::mutex> lg_other(other->effected_mutex_);
+        if(decider_frame->type_ == pframe::Frametype::I || other_frame->type_ == pframe::Frametype::I){
+            return;
+        }
         
         CORE_SET<uint64_t>& effected_ids = decider->effected_map_[decider_frame->idx_];
         if(effected_ids.contains(other->id_)){
@@ -456,6 +475,11 @@ void FrameGroup::OnCaptured(){
 void FrameGroup::OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id){
     for(FrameGroupObserver* observer : observers_){
         observer->OnUpdateId(captured, object_type, remote_id);
+    }
+}
+void FrameGroup::OnSyncIFrame(int captured, int succeed, uint64_t remote_id){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnSyncIFrame(captured, succeed, remote_id);
     }
 }
 int FrameGroup::OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){

@@ -71,6 +71,9 @@ void FrameGroupApi::AddRender(uint64_t remote_id, FrameRenderApi* render){
 void FrameGroupApi::RemoveRender(uint64_t remote_id){
     return ((PIMPL*)pimpl_.get())->group_->RemoveRender(remote_id);
 }
+void FrameGroupApi::SyncIFrames(uint64_t remote_id){
+    return ((PIMPL*)pimpl_.get())->group_->SyncIFrames(remote_id);
+}
 
 void FrameGroupApi::RemoveAllIDs(){
     return ((PIMPL*)pimpl_.get())->group_->RemoveAllIDs();

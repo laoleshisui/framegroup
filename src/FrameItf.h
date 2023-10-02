@@ -42,6 +42,7 @@ public:
     void ToProto(pframe::FrameData& pframe){
         pframe.set_type(type_);
         pframe.set_idx(idx_);
+        //I only Encode states and P only encode processes.
         if(type_ == pframe::Frametype::I){
             for(CORE_MAP<std::string, std::vector<std::string>>::value_type& i : states_){
                 pframe::State* p = pframe.add_states();
@@ -50,10 +51,12 @@ public:
                     p->add_values(value);
                 }
             }
-        }
-        for(Process& i : processes_){
-            pframe::Process* p = pframe.add_processes();
-            i.ToProto(*p);
+        }else{
+            // P frame
+            for(Process& i : processes_){
+                pframe::Process* p = pframe.add_processes();
+                i.ToProto(*p);
+            }
         }
     }
     void ParseFrom(const pframe::FrameData& pframe){
