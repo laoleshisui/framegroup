@@ -372,6 +372,9 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         else if(event.code() == pframe::EventCode::SYNCIFRAMES_FAILED){
             OnSyncIFrame(captured_objects_id_.contains(event.id()), 0, event.id());
         }
+        else if(event.code() == pframe::EventCode::ROOM_END){
+            OnRoomEnd(event.id());
+        }
     }
 }
 void FrameGroup::EventCB(acore::Server::Client* client, const short event){
@@ -465,6 +468,11 @@ void FrameGroup::OnLogin(int code, int id){
 void FrameGroup::OnEnterRoom(int succeed, uint64_t room_id){
     for(FrameGroupObserver* observer : observers_){
         observer->OnEnterRoom(succeed, room_id);
+    }
+}
+void FrameGroup::OnRoomEnd(uint64_t room_id){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnRoomEnd(room_id);
     }
 }
 void FrameGroup::OnCaptured(){
