@@ -46,6 +46,7 @@ void FrameGroup::Connect(std::string ip, int port){
 }
 
 void FrameGroup::DisConnect(){
+    id_ = 0;
     if(client_.client_bev_){
         client_.DisConnect(client_.client_bev_);
     }
