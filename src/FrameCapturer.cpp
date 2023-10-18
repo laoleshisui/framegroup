@@ -21,12 +21,10 @@ has_update_(false)
 FrameCapturer::~FrameCapturer(){}
 
 void FrameCapturer::Capture(){
-    CORE_LOG(INFO) << " FrameCapturer Capture:" << this;
     std::lock_guard<std::mutex> lg(frame_mutex_);
     if(!has_update_){
         return;
     }
-    CORE_LOG(INFO) << " FrameCapturer Capture:" << this;
     if(!time_controller_ || !time_controller_->UpdateFrameIdx(frame_->idx_)){
         return;
     }
@@ -78,7 +76,7 @@ void FrameCapturer::SetState(std::string type, std::vector<std::string> values){
     frame_->states_[type] = std::move(values);
 }
 void FrameCapturer::AddProcess(std::string type, std::vector<std::string> args){
-    CORE_LOG(INFO) << "AddProcess:" << type;
+    // CORE_LOG(INFO) << "AddProcess:" << type;
     std::lock_guard<std::mutex> lg(frame_mutex_);
     frame_->processes_.emplace_back();
     frame_->processes_.back().type_ = std::move(type);

@@ -16,7 +16,7 @@ time_controller_(std::make_unique<FrameTimeController>()),
 objects_id_mutex_(),
 client_(6),
 save_frame_file_task_pool_(1),
-save_frame_file_(NULL),
+save_frame_file_(nullptr),
 enable_effect_caculate_(false),
 observers_()
 {
@@ -29,8 +29,6 @@ observers_()
 
 FrameGroup::~FrameGroup()
 {
-    DisConnect();
-    RemoveAllIDs();
     if(save_frame_file_){
         fflush(save_frame_file_);
         fclose(save_frame_file_);
@@ -47,9 +45,7 @@ void FrameGroup::Connect(std::string ip, int port){
 
 void FrameGroup::DisConnect(){
     id_ = 0;
-    if(client_.client_bev_){
-        client_.DisConnect(client_.client_bev_);
-    }
+    client_.DisConnect();
 }
 
 void FrameGroup::Login(){
