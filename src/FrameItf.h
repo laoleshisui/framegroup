@@ -53,9 +53,12 @@ public:
             }
         }else{
             // P frame
-            for(Process& i : processes_){
+            for(CORE_MAP<std::string, std::vector<std::string>>::value_type& i : processes_){
                 pframe::Process* p = pframe.add_processes();
-                i.ToProto(*p);
+                p->set_type(i.first);
+                for(std::string& args : i.second){
+                    p->add_args(std::move(args));
+                }
             }
         }
     }
@@ -73,15 +76,18 @@ public:
             }
         }
         for(const pframe::Process& i : pframe.processes()){
-            processes_.emplace_back();
-            processes_.back().ParseFrom(i);
+            std::vector<std::string> args;
+            for(const std::string& arg : i.args()){
+                args.push_back(arg);
+            }
+            processes_.insert({i.type(), std::move(args)});
         }
     }
 
     pframe::Frametype type_;
     uint64_t idx_;
     CORE_MAP<std::string, std::vector<std::string>> states_;
-    std::vector<Process> processes_;
+    std::unordered_multimap<std::string, std::vector<std::string>> processes_;
 };
 }
 #endif

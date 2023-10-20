@@ -445,14 +445,16 @@ void FrameGroup::ReviseEffect(FrameObject* decider, FrameItf* decider_frame, Fra
 
         //effect now!
         //Attach effect in the nearest Frame
-        for(Process& i : decider_frame->processes_){
-            for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
-                int ret = OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
-                if(ret){
-                    effected_ids.insert(other->id_);
-                }
-            }
-        }
+
+        //FIXME: unuse this code temp because of processes_ is replaced with multimap.
+        // for(Process& i : decider_frame->processes_){
+        //     for(CORE_MAP<std::string, std::vector<std::string>>::value_type& j : other_frame->states_){
+        //         int ret = OnEffect(decider->id_, i.type_, i.args_, other->id_, j.first, j.second);
+        //         if(ret){
+        //             effected_ids.insert(other->id_);
+        //         }
+        //     }
+        // }
     }
 }
 

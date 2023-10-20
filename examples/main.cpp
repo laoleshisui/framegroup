@@ -120,7 +120,7 @@ namespace{\
             values[1] = std::to_string(py);\
             px += 1.f;\
             py += 1.f;\
-            frame_capturer##x->AddProcess("Attack" , values);\
+            frame_capturer##x->AddProcess("Attack" , values, false);\
             std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
         }\
         }\

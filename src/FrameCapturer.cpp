@@ -75,12 +75,15 @@ void FrameCapturer::SetState(std::string type, std::vector<std::string> values){
     std::lock_guard<std::mutex> lg(frame_mutex_);
     frame_->states_[type] = std::move(values);
 }
-void FrameCapturer::AddProcess(std::string type, std::vector<std::string> args){
+void FrameCapturer::AddProcess(std::string type, std::vector<std::string> args, bool override){
     // CORE_LOG(INFO) << "AddProcess:" << type;
     std::lock_guard<std::mutex> lg(frame_mutex_);
-    frame_->processes_.emplace_back();
-    frame_->processes_.back().type_ = std::move(type);
-    frame_->processes_.back().args_ = std::move(args);
+    if(override){
+        if(frame_->processes_.contains(type)){
+            frame_->processes_.erase(type);
+        }
+    }
+    frame_->processes_.insert({std::move(type), std::move(args)});
 
     has_update_ = true;
 }

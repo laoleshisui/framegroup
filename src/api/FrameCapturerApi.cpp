@@ -35,6 +35,6 @@ void FrameCapturerApi::SetState(std::string type, std::vector<std::string> value
 void FrameCapturerApi::SendIFrame(){
     return ((PIMPL*)pimpl_.get())->capturer_->SendIFrame();
 }
-void FrameCapturerApi::AddProcess(std::string type, std::vector<std::string> args){
-    return ((PIMPL*)pimpl_.get())->capturer_->AddProcess(std::move(type), std::move(args));
+void FrameCapturerApi::AddProcess(std::string type, std::vector<std::string> args, bool override){
+    return ((PIMPL*)pimpl_.get())->capturer_->AddProcess(std::move(type), std::move(args), override);
 }

@@ -26,11 +26,11 @@ void FrameRender::Render(std::shared_ptr<FrameItf> frame){
                 observer->OnState(i.first, i.second);
             }
         }
-        for(Process& i : frame->processes_){
+        for(std::unordered_multimap<std::string, std::vector<std::string>>::value_type& i : frame->processes_){
             if(id_){
-                observer->OnProcess(id_, i.type_, i.args_);
+                observer->OnProcess(id_, i.first, i.second);
             }else{
-                observer->OnProcess(i.type_, i.args_);
+                observer->OnProcess(i.first, i.second);
             }
         }
     }

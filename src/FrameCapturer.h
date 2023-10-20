@@ -20,7 +20,7 @@ public:
     ~FrameCapturer();
 
     virtual void SetState(std::string type, std::vector<std::string> values);
-    virtual void AddProcess(std::string type, std::vector<std::string> args);
+    virtual void AddProcess(std::string type, std::vector<std::string> args, bool override);
 
     void SendIFrame();
 

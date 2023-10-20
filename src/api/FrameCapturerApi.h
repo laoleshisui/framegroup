@@ -18,7 +18,7 @@ public:
     void* Get();
     void SetState(std::string type, std::vector<std::string> values);
     void SendIFrame();
-    void AddProcess(std::string type, std::vector<std::string> args);
+    void AddProcess(std::string type, std::vector<std::string> args, bool override);
 };
 
 }
