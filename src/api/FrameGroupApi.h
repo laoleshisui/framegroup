@@ -15,6 +15,7 @@ public:
     virtual void OnConn(int succeed){}
     virtual void OnLogin(int code, uint64_t id){}
     virtual void OnEnterRoom(int succeed, uint64_t room_id, int64_t remaining_ms){}
+    virtual void OnExitRoom(uint64_t room_id, uint64_t group_id, std::string type, uint64_t remote_id){}
     virtual void OnRoomEnd(uint64_t room_id){}
     virtual void OnCaptured(){}
     virtual void OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id){}

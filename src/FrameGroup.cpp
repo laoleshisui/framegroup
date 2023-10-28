@@ -364,8 +364,25 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             OnEnterRoom(0, room_id_, 0);
         }
         else if(event.code() == pframe::EventCode::EXIT_ROOM_SUCCEED){
-            room_id_ = 0;
-            OnEnterRoom(0, room_id_, 0);
+            if(event.target_id() == id_){
+                room_id_ = 0;
+                OnExitRoom(room_id_, event.target_id(), "", 0);
+                return;
+            }
+
+            pframe::RegisterObjects registered_objects;
+            registered_objects.ParseFromString(event.data());
+
+            int ids_idx = 0;
+            for(int i = 0; i < registered_objects.nums_of_objects_size(); ++i){
+                int num = registered_objects.nums_of_objects(i);
+                std::string type = registered_objects.object_types(i);
+                for(int j = 0; j < num; ++j){
+                    uint64_t remote_id = registered_objects.ids(ids_idx + j);
+                    OnExitRoom(room_id_, event.target_id(), type, remote_id);
+                }
+                ids_idx += num;
+            }
         }
         else if(event.code() == pframe::EventCode::SYNCIFRAMES_SUCCEED){
             OnSyncIFrame(captured_objects_id_.contains(event.id()), 1, event.id());
@@ -471,6 +488,11 @@ void FrameGroup::OnLogin(int code, int id){
 void FrameGroup::OnEnterRoom(int succeed, uint64_t room_id, int64_t remaining_ms){
     for(FrameGroupObserver* observer : observers_){
         observer->OnEnterRoom(succeed, room_id, remaining_ms);
+    }
+}
+void FrameGroup::OnExitRoom(uint64_t room_id, uint64_t group_id, std::string type, uint64_t remote_id){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnExitRoom(room_id, group_id, type, remote_id);
     }
 }
 void FrameGroup::OnRoomEnd(uint64_t room_id){
