@@ -21,6 +21,9 @@ public:
     virtual void OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id){}
     virtual void OnSyncIFrame(int captured, int succeed, uint64_t remote_id){}
     virtual int OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){}
+    virtual void OnConsumeItem(int succeed, uint64_t remote_id, uint64_t item_id, int count){}
+    virtual void OnObtainItem(int succeed, uint64_t remote_id, uint64_t item_id, int count){}
+    virtual void OnIterateItem(uint64_t remote_id, uint64_t item_id, int count){}
 };
 
 class FrameCapturerApi;
@@ -48,6 +51,9 @@ public:
     void AddRender(uint64_t remote_id, FrameRenderApi* render);
     void RemoveRender(uint64_t remote_id);
     void SyncIFrames(uint64_t remote_id);
+    void ConsumeItem(uint64_t remote_id, uint64_t item_id, int count);
+    void ObtainItem(uint64_t remote_id, uint64_t item_id, int count);
+    void IterateItems(uint64_t remote_id, uint64_t item_id);
 
     void RemoveAllIDs();
 

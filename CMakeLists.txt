@@ -122,6 +122,10 @@ add_executable(main
   examples/main.cpp
 )
 target_link_libraries(main ${PROJECT_NAME}_api)
+add_executable(items
+  examples/items.cpp
+)
+target_link_libraries(items ${PROJECT_NAME}_api)
 
 ##-----------######  GenerateCmakePackage  ######-----------
 SET(CMAKE_INSTALL_LIBDIR lib)

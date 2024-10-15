@@ -174,6 +174,39 @@ void FrameGroup::SyncIFrames(uint64_t remote_id){
     client_.Send(client_.client_bev_, sync_iframes.SerializeAsString());
 }
 
+void FrameGroup::ConsumeItem(uint64_t remote_id, uint64_t item_id, int count){
+    pframe::ConsumeItem consume_item;
+    consume_item.set_proto_type(pframe::ProtoType::CONSUME_ITEM);
+    consume_item.mutable_item()->set_object_id(remote_id);
+    consume_item.mutable_item()->set_item_id(item_id);
+    consume_item.mutable_item()->set_count(count);
+    {
+        std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+        client_.Send(client_.client_bev_, consume_item.SerializeAsString());
+    }
+}
+void FrameGroup::ObtainItem(uint64_t remote_id, uint64_t item_id, int count){
+    pframe::ObtainItem obtain_item;
+    obtain_item.set_proto_type(pframe::ProtoType::OBTAIN_ITEM);
+    obtain_item.mutable_item()->set_object_id(remote_id);
+    obtain_item.mutable_item()->set_item_id(item_id);
+    obtain_item.mutable_item()->set_count(count);
+    {
+        std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+        client_.Send(client_.client_bev_, obtain_item.SerializeAsString());
+    }
+}
+void FrameGroup::IterateItems(uint64_t remote_id, uint64_t item_id){
+    pframe::IterateItems iterate_items;
+    iterate_items.set_proto_type(pframe::ProtoType::ITERATE_ITEMS);
+    iterate_items.set_object_id(remote_id);
+    iterate_items.set_item_id(item_id);
+    {
+        std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+        client_.Send(client_.client_bev_, iterate_items.SerializeAsString());
+    }
+}
+
 void FrameGroup::RemoveAllIDs(){
     std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
 
@@ -252,7 +285,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
     pframe::Relay relay;
     relay.ParseFromArray(data, *len);
 
-    CORE_LOG(INFO) << relay.proto_type();
+    // CORE_LOG(INFO) << relay.proto_type();
     if(relay.proto_type() == pframe::ProtoType::FRAME){
         pframe::Frame frame;
         frame.ParseFromArray(data, *len);
@@ -393,6 +426,33 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         else if(event.code() == pframe::EventCode::ROOM_END){
             OnRoomEnd(event.id());
         }
+        else if(event.code() == pframe::EventCode::CONSUME_ITEM_SUCCEED){
+            pframe::ConsumeItem consume_item;
+            consume_item.ParseFromString(event.data());
+            OnConsumeItem(1, consume_item.item().object_id(), consume_item.item().item_id(), consume_item.item().count());
+        }
+        else if(event.code() == pframe::EventCode::CONSUME_ITEM_FAILED){
+            pframe::ConsumeItem consume_item;
+            consume_item.ParseFromString(event.data());
+            OnConsumeItem(0, consume_item.item().object_id(), consume_item.item().item_id(), consume_item.item().count());
+        }
+        else if(event.code() == pframe::EventCode::OBTAIN_ITEM_SUCCEED){
+            pframe::ObtainItem obtain_item;
+            obtain_item.ParseFromString(event.data());
+            OnObtainItem(1, obtain_item.item().object_id(), obtain_item.item().item_id(), obtain_item.item().count());
+        }
+        else if(event.code() == pframe::EventCode::OBTAIN_ITEM_FAILED){
+            pframe::ObtainItem obtain_item;
+            obtain_item.ParseFromString(event.data());
+            OnObtainItem(0, obtain_item.item().object_id(), obtain_item.item().item_id(), obtain_item.item().count());
+        }
+        else if(event.code() == pframe::EventCode::ITERATE_ITEMS_SUCCEED){
+            pframe::IterateItemsResp iterate_item_resp;
+            iterate_item_resp.ParseFromString(event.data());
+            for(const pframe::Item& item : iterate_item_resp.item()){
+                OnIterateItem(item.object_id(), item.item_id(), item.count());
+            }
+        }
     }
 }
 void FrameGroup::EventCB(acore::Server::Client* client, const short event){
@@ -518,5 +578,20 @@ void FrameGroup::OnSyncIFrame(int captured, int succeed, uint64_t remote_id){
 int FrameGroup::OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){
     for(FrameGroupObserver* observer : observers_){
         observer->OnEffect(decider_remote_id, process_type, args, other_remote_id, state_type, values);
+    }
+}
+void FrameGroup::OnConsumeItem(int succeed, uint64_t remote_id, uint64_t item_id, int count){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnConsumeItem(succeed, remote_id, item_id, count);
+    }
+}
+void FrameGroup::OnObtainItem(int succeed, uint64_t remote_id, uint64_t item_id, int count){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnObtainItem(succeed, remote_id, item_id, count);
+    }
+}
+void FrameGroup::OnIterateItem(uint64_t remote_id, uint64_t item_id, int count){
+    for(FrameGroupObserver* observer : observers_){
+        observer->OnIterateItem(remote_id, item_id, count);
     }
 }
