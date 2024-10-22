@@ -22,7 +22,7 @@ using namespace framegroup;
 
 #define IP "127.0.0.1"
 #define PORT 10002
-#define ROOM_ID 1
+#define ROOM_ID 3
 #define CAPTURE_DELAY_MS 16
 
 
@@ -35,10 +35,10 @@ namespace{\
     {\
     public:\
         virtual void OnState(const std::string& type, const std::vector<std::string>& values){\
-            CORE_LOG(INFO) << "OnState" << #x << " "<< type << " " << values.size();\
+            CORE_LOG(INFO) << "OnState" << #x << " "<< type << " args:" << values.size();\
         }\
         virtual void OnProcess(const std::string& type, const std::vector<std::string>& args){\
-            CORE_LOG(INFO) << "OnState" << #x << " "<< type << " " << args.size();\
+            CORE_LOG(INFO) << "OnProcess" << #x << " "<< type << " args:" << args.size();\
         }\
     };\
 }\
@@ -55,7 +55,7 @@ namespace{\
                 values[1] = std::to_string(py);\
                 px += 1.f;\
                 py += 1.f;\
-                frame_capturer##x->AddProcess("Attack" , values, false);\
+                frame_capturer##x->AddProcess("Attack" + std::string(#x) , values, false);\
                 std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
             }\
         }\
@@ -74,28 +74,30 @@ namespace{\
         }\
         virtual void OnEnterRoom(int succeed, uint64_t room_id, int64_t remaining_ms){\
             CORE_LOG(INFO) << "OnEnterRoom:" << room_id;\
-            group##x->AddCaptureredObjects("test_type_##x", 1, true);\
+            group##x->AddCaptureredObjects(#x, 1, true);\
         }\
         virtual void OnExitRoom(uint64_t room_id, uint64_t group_id, std::string type, uint64_t remote_id){}\
         virtual void OnCaptured(){\
             CORE_LOG(INFO) << "OnCaptured";\
         }\
         virtual void OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id){\
-            CORE_LOG(INFO) << "OnUpdateId:" << object_type <<" " << remote_id;\
+            CORE_LOG(INFO) << "OnUpdateId:" << #x <<"+" << captured << ", " << object_type <<" " << remote_id;\
             if(captured){\
                 group##x->AddCapturer(remote_id, frame_capturer##x.get());\
                 std::thread capturer_thread##x(&GObserver##x::CaptureThread, this);\
                 capturer_thread##x.detach();\
                 remote_id_ = remote_id;\
+                CORE_LOG(INFO) << "group" << #x << " AddCapturer:" << remote_id;\
                 group##x->ObtainItem(remote_id_, 1, 101);\
-                sleep(2);\
+                std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
                 group##x->ConsumeItem(remote_id_, 1, 10);\
-                sleep(2);\
+                std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
                 group##x->IterateItems(0, 0);\
-            }else{\
-                FrameRenderApi* frame_render = new FrameRenderApi();\
-                frame_render->AddObserver(render_observer##x.get());\
-                group##x->AddRender(remote_id, frame_render);\
+            }else if(!group##x->RenderExisted(remote_id)){\
+                    FrameRenderApi* frame_render = new FrameRenderApi();\
+                    frame_render->AddObserver(render_observer##x.get());\
+                    group##x->AddRender(remote_id, frame_render);\
+                    CORE_LOG(INFO) << "group" << #x << " AddRender:" << remote_id;\
             }\
         }\
         virtual int OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){}\
@@ -122,6 +124,7 @@ DECLARE_CAPTUTER_RENDER(2)
 
 int main(){
     RUN(1)
+    // std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));
     RUN(2)
 
     cv.wait_for(ul, std::chrono::duration(std::chrono::milliseconds(5000)));

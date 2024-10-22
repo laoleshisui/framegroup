@@ -50,6 +50,7 @@ public:
     void RemoveCapturer(uint64_t remote_id);
     void AddRender(uint64_t remote_id, FrameRenderApi* render);
     void RemoveRender(uint64_t remote_id);
+    bool RenderExisted(uint64_t remote_id);
     void SyncIFrames(uint64_t remote_id);
     void ConsumeItem(uint64_t remote_id, uint64_t item_id, int count);
     void ObtainItem(uint64_t remote_id, uint64_t item_id, int count);

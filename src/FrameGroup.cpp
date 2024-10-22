@@ -144,9 +144,10 @@ void FrameGroup::AddRender(uint64_t remote_id, FrameRender* render){
     if(frame_renders_.contains(remote_id)){
         CORE_LOG(ERROR) << "frame_renders_ has already contianed id:" << remote_id;
         assert(0);
+    }else{
+        frame_renders_[remote_id] = render;
+        frame_objects_.at(remote_id)->AddSink(render);
     }
-    frame_objects_[remote_id]->AddSink(render);
-    frame_renders_[remote_id] = render;
 }
 
 void FrameGroup::RemoveRender(uint64_t remote_id){
@@ -158,6 +159,10 @@ void FrameGroup::RemoveRender(uint64_t remote_id){
     FrameRender* render = frame_renders_[remote_id];
     frame_objects_[remote_id]->RemoveSink(render);
     frame_renders_.erase(remote_id);
+}
+bool FrameGroup::RenderExisted(uint64_t remote_id){
+    std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
+    return frame_renders_.contains(remote_id);
 }
 
 void FrameGroup::SyncIFrames(uint64_t remote_id){
@@ -292,6 +297,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
 
         // Only receive other groups' frame
         assert(frame.group_id() != id_);
+        // CORE_LOG(INFO) << id_ << " recv from " << frame.group_id();
 
         CORE_MAP<uint64_t, std::unique_ptr<FrameObject>>::iterator it;
         uint64_t object_id = frame.object_id();
@@ -299,6 +305,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
             it = frame_objects_.find(object_id);
             if (it == frame_objects_.end()){
+                CORE_LOG(WARNING) << "Cannot find frame_object: " << object_id;
                 return;
             } 
         }
@@ -341,11 +348,15 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
                 for(int j = 0; j < num; ++j){
                     uint64_t remote_id = registered_objects.ids(ids_idx + j);
 
-                    frame_objects_[remote_id] = std::make_unique<FrameObject>();
-                    frame_objects_[remote_id]->id_ = remote_id;
-                    captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
+                    if(frame_objects_.contains(remote_id)){
+                        CORE_LOG(WARNING) << "frame_objects_ has contained the capturer:" << remote_id;
+                    }else{
+                        frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                        frame_objects_[remote_id]->id_ = remote_id;
+                        captured_objects_id_.insert(remote_id);//atfer FrameObject being created!
 
-                    OnUpdateId(1, type, remote_id);
+                        OnUpdateId(1, type, remote_id);
+                    }
                 }
                 ids_idx += num;
             }
@@ -365,11 +376,15 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
                 for(int j = 0; j < num; ++j){
                     uint64_t remote_id = registered_objects.ids(ids_idx + j);
 
-                    frame_objects_[remote_id] = std::make_unique<FrameObject>();
-                    frame_objects_[remote_id]->id_ = remote_id;
-                    uncaptured_objects_id_.insert(remote_id);//atfer FrameObject being created!
+                    if(frame_objects_.contains(remote_id)){
+                        CORE_LOG(WARNING) << "frame_objects_ has contained the render:" << remote_id;
+                    }else{
+                        frame_objects_[remote_id] = std::make_unique<FrameObject>();
+                        frame_objects_[remote_id]->id_ = remote_id;
+                        uncaptured_objects_id_.insert(remote_id);//atfer FrameObject being created!
 
-                    OnUpdateId(0, type, remote_id);
+                        OnUpdateId(0, type, remote_id);
+                    }
                 }
                 ids_idx += num;
             }

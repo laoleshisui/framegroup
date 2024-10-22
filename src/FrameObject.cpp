@@ -54,11 +54,12 @@ void FrameObject::OnPacket(std::shared_ptr<PacketItf> packet){
     // send to render
     SendFrame(frame_copy);
 
-    // std::cout << id_ << ": " << frame->idx_ << " "<< frame->states_["POSITION"][0]<< " " << frame->states_["POSITION"][1]<<std::endl;
+    // CORE_LOG(INFO) << id_ << ": " << frame->idx_ <<std::endl;
 }
 
 void FrameObject::SendFrame(std::shared_ptr<FrameItf> frame){
     RunOnEverySink([=](FrameSinkItf* sink){
         sink->OnFrame(frame);
     });
+    // CORE_LOG(INFO) << id_ << ": " << frame->idx_ << "sinks:" << sinks_.size()<<std::endl;
 }
