@@ -54,10 +54,10 @@ void FrameCapturer::Capture(){
 void FrameCapturer::AttachTimeController(FrameTimeController* time_controller){
     CORE_LOG(INFO) << "AttachTimeController";
     std::lock_guard<std::mutex> lg(frame_mutex_);
+    CORE_LOG(INFO) << "tc_key_: " << tc_key_;
     assert(!tc_key_);
     time_controller_ = time_controller;
     tc_key_ = time_controller_->AddRunable(std::bind(&FrameCapturer::Capture, this));
-    CORE_LOG(INFO) << "tc_key_: " << tc_key_;
 }
 
 void FrameCapturer::DetachTimeController(){

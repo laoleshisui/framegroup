@@ -22,7 +22,7 @@ using namespace framegroup;
 
 #define IP "127.0.0.1"
 #define PORT 10002
-#define ROOM_ID 3
+#define ROOM_ID 1
 #define CAPTURE_DELAY_MS 16
 
 
@@ -46,11 +46,15 @@ std::unique_ptr<FRender##x> render_observer##x = std::make_unique<FRender##x>();
 namespace{\
     class GObserver##x : public FrameGroupObserver{\
     public:\
+        uint64_t group_id_;\
         uint64_t remote_id_;\
+        uint64_t room_id_;\
         void CaptureThread(){\
             static float px = 0, py = 0;\
             static std::vector<std::string> values(2, "");\
-            while(is_capturing_##x){\
+            int n_processes = 150;\
+            while(is_capturing_##x && n_processes){\
+                --n_processes;\
                 values[0] = std::to_string(px);\
                 values[1] = std::to_string(py);\
                 px += 1.f;\
@@ -58,6 +62,7 @@ namespace{\
                 frame_capturer##x->AddProcess("Attack" + std::string(#x) , values, false);\
                 std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
             }\
+            group##x->ExitRoom(room_id_);\
         }\
         virtual void OnConn(int succeed){\
             CORE_LOG(INFO) << "OnConn:" << succeed;\
@@ -69,14 +74,22 @@ namespace{\
                 is_capturing_##x = false;\
             }else{\
                 is_capturing_##x = true;\
+                group_id_ = id;\
                 group##x->EnterRoom(ROOM_ID);\
             }\
         }\
         virtual void OnEnterRoom(int succeed, uint64_t room_id, int64_t remaining_ms){\
-            CORE_LOG(INFO) << "OnEnterRoom:" << room_id;\
+            CORE_LOG(INFO) << "OnEnterRoom:" << std::string(#x) << " enter " << room_id;\
             group##x->AddCaptureredObjects(#x, 1, true);\
+            room_id_ = room_id;\
         }\
-        virtual void OnExitRoom(uint64_t room_id, uint64_t group_id, std::string type, uint64_t remote_id){}\
+        virtual void OnExitRoom(uint64_t room_id, uint64_t group_id, std::string type, uint64_t remote_id){\
+            CORE_LOG(INFO) << "OnExitRoom:" << std::string(#x) << " exit " << room_id << "(is me :)" << (group_id_ == group_id);\
+            if(group_id_ == group_id){\
+                group##x->RemoveAllIDs();\
+                group##x->EnterRoom(room_id + 1);/*Enter next room*/\
+            }\
+        }\
         virtual void OnCaptured(){\
             CORE_LOG(INFO) << "OnCaptured";\
         }\
@@ -127,6 +140,7 @@ int main(){
     // std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));
     RUN(2)
 
-    cv.wait_for(ul, std::chrono::duration(std::chrono::milliseconds(5000)));
+    cv.wait_for(ul, std::chrono::duration(std::chrono::milliseconds(50000)));
+    CORE_LOG(INFO) << "main finished.";
     return 0;
 }

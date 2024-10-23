@@ -413,8 +413,8 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         }
         else if(event.code() == pframe::EventCode::EXIT_ROOM_SUCCEED){
             if(event.target_id() == id_){
-                room_id_ = 0;
                 OnExitRoom(room_id_, event.target_id(), "", 0);
+                room_id_ = 0;
                 return;
             }
 
