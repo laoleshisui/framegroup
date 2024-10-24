@@ -35,8 +35,8 @@ void FrameGroupApi::Connect(std::string ip, int port){
 void FrameGroupApi::DisConnect(){
     return ((PIMPL*)pimpl_.get())->group_->DisConnect();
 }
-void FrameGroupApi::Login(){
-    return ((PIMPL*)pimpl_.get())->group_->Login();
+void FrameGroupApi::Login(uint64_t group_id){
+    return ((PIMPL*)pimpl_.get())->group_->Login(group_id);
 }
 void FrameGroupApi::Logout(){
     return ((PIMPL*)pimpl_.get())->group_->Logout();

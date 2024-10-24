@@ -66,7 +66,7 @@ namespace{\
         }\
         virtual void OnConn(int succeed){\
             CORE_LOG(INFO) << "OnConn:" << succeed;\
-            group##x->Login();\
+            group##x->Login(0);\
         }\
         virtual void OnLogin(int code, uint64_t id){\
             CORE_LOG(INFO) << "OnLogin:" << code <<" " << id;\

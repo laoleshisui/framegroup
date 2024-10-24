@@ -7,72 +7,6 @@ std::mutex mutex = {};
 std::unique_lock<std::mutex> ul(mutex);
 std::condition_variable cv;
 
-#if 0
-#include "Template.h"
-    
-DECLARE_CAPTUTER(a)
-DECLARE_CAPTUTER(b)
-DECLARE_CAPTUTER(c)
-DECLARE_CAPTUTER(d)
-DECLARE_CAPTUTER(e)
-
-DECLARE_RENDER(01)
-DECLARE_RENDER(02)
-DECLARE_RENDER(03)
-DECLARE_RENDER(04)
-DECLARE_RENDER(05)
-
-DECLARE_CAPTUTER_RENDER(A)
-DECLARE_CAPTUTER_RENDER(B)
-DECLARE_CAPTUTER_RENDER(C)
-DECLARE_CAPTUTER_RENDER(D)
-DECLARE_CAPTUTER_RENDER(E)
-
-
-int main(){
-
-    RUN(a)
-    RUN(b)
-    RUN(c)
-    RUN(d)
-    RUN(e)
-
-    RUN(01)
-    RUN(02)
-    RUN(03)
-    RUN(04)
-    RUN(05)
-
-    RUN(A)
-    RUN(B)
-    RUN(C)
-    RUN(D)
-    RUN(E)
-
-    cv.wait_for(ul, std::chrono::duration(std::chrono::milliseconds(5000)));
-
-    DELETE_CAPTUTER(a)
-    DELETE_CAPTUTER(b)
-    DELETE_CAPTUTER(c)
-    DELETE_CAPTUTER(d)
-    DELETE_CAPTUTER(e)
-
-    DELETE_RENDER(01)
-    DELETE_RENDER(02)
-    DELETE_RENDER(03)
-    DELETE_RENDER(04)
-    DELETE_RENDER(05)
-
-    DELETE_CAPTUTER_RENDER(A)
-    DELETE_CAPTUTER_RENDER(B)
-    DELETE_CAPTUTER_RENDER(C)
-    DELETE_CAPTUTER_RENDER(D)
-    DELETE_CAPTUTER_RENDER(E)
-
-    CORE_LOG(INFO)<< "main() finished.";     
-}
-#endif
-
 #include <api/FrameGroupApi.h>
 #include <api/FrameRenderApi.h>
 #include <api/FrameCapturerApi.h>
@@ -86,7 +20,7 @@ int main(){
 #include <acore/log/Log.h>
 using namespace framegroup;
 
-#define IP "1.15.134.166"
+#define IP "127.0.0.1"
 #define PORT 10002
 #define ROOM_ID 1
 #define CAPTURE_DELAY_MS 16
@@ -101,10 +35,10 @@ namespace{\
     {\
     public:\
         virtual void OnState(const std::string& type, const std::vector<std::string>& values){\
-            CORE_LOG(INFO) << "OnState" << #x << " "<< type << " " << values.size();\
+            CORE_LOG(INFO) << "OnState" << #x << " "<< type << " args:" << values.size();\
         }\
         virtual void OnProcess(const std::string& type, const std::vector<std::string>& args){\
-            CORE_LOG(INFO) << "OnState" << #x << " "<< type << " " << args.size();\
+            CORE_LOG(INFO) << "OnProcess" << #x << " "<< type << " args:" << args.size();\
         }\
     };\
 }\
@@ -112,48 +46,88 @@ std::unique_ptr<FRender##x> render_observer##x = std::make_unique<FRender##x>();
 namespace{\
     class GObserver##x : public FrameGroupObserver{\
     public:\
+        uint64_t group_id_;\
+        uint64_t remote_id_;\
+        uint64_t room_id_;\
         void CaptureThread(){\
             static float px = 0, py = 0;\
             static std::vector<std::string> values(2, "");\
+            int n_processes = 150;\
             while(is_capturing_##x){\
-            values[0] = std::to_string(px);\
-            values[1] = std::to_string(py);\
-            px += 1.f;\
-            py += 1.f;\
-            frame_capturer##x->AddProcess("Attack" , values, false);\
-            std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
-        }\
+                if(!(--n_processes)){\
+                    group##x->ExitRoom(room_id_);\
+                    n_processes = 150;\
+                    std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
+                }\
+                values[0] = std::to_string(px);\
+                values[1] = std::to_string(py);\
+                px += 1.f;\
+                py += 1.f;\
+                frame_capturer##x->AddProcess("Attack" + std::string(#x) , values, false);\
+                std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
+            }\
         }\
         virtual void OnConn(int succeed){\
             CORE_LOG(INFO) << "OnConn:" << succeed;\
-            group##x->Login();\
+            group##x->Login(0);\
         }\
         virtual void OnLogin(int code, uint64_t id){\
             CORE_LOG(INFO) << "OnLogin:" << code <<" " << id;\
             if(code != 1){\
-                is_capturing_##x = false;\
+                /*is_capturing_##x = false;*/\
+                group##x->Login(group_id_);\
             }else{\
                 is_capturing_##x = true;\
-                group##x->AddCaptureredObjects("test_type_##x", 1, true);\
+                group_id_ = id;\
+                group##x->EnterRoom(ROOM_ID);\
+            }\
+        }\
+        virtual void OnEnterRoom(int succeed, uint64_t room_id, int64_t remaining_ms){\
+            CORE_LOG(INFO) << "OnEnterRoom:" << std::string(#x) << " enter " << room_id;\
+            group##x->AddCaptureredObjects(#x, 1, true);\
+            room_id_ = room_id;\
+        }\
+        virtual void OnExitRoom(uint64_t room_id, uint64_t group_id, std::string type, uint64_t remote_id){\
+            CORE_LOG(INFO) << "OnExitRoom:" << std::string(#x) << " exit " << room_id << "(is me :)" << (group_id_ == group_id);\
+            if(group_id_ == group_id){\
+                /*group##x->RemoveAllIDs();\
+                group##x->EnterRoom(room_id + 1);Enter next room*/\
+                group##x->Logout();\
             }\
         }\
         virtual void OnCaptured(){\
             CORE_LOG(INFO) << "OnCaptured";\
-            group##x->EnterRoom(ROOM_ID);\
         }\
         virtual void OnUpdateId(int captured, const std::string& object_type, uint64_t remote_id){\
-            CORE_LOG(INFO) << "OnUpdateId:" << object_type <<" " << remote_id;\
+            CORE_LOG(INFO) << "OnUpdateId:" << #x <<"+" << captured << ", " << object_type <<" " << remote_id;\
             if(captured){\
                 group##x->AddCapturer(remote_id, frame_capturer##x.get());\
                 std::thread capturer_thread##x(&GObserver##x::CaptureThread, this);\
                 capturer_thread##x.detach();\
-            }else{\
-                FrameRenderApi* frame_render = new FrameRenderApi();\
-                frame_render->AddObserver(render_observer##x.get());\
-                group##x->AddRender(remote_id, frame_render);\
+                remote_id_ = remote_id;\
+                CORE_LOG(INFO) << "group" << #x << " AddCapturer:" << remote_id;\
+                group##x->ObtainItem(remote_id_, 1, 101);\
+                std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
+                group##x->ConsumeItem(remote_id_, 1, 10);\
+                std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
+                group##x->IterateItems(0, 0);\
+            }else if(!group##x->RenderExisted(remote_id)){\
+                    FrameRenderApi* frame_render = new FrameRenderApi();\
+                    frame_render->AddObserver(render_observer##x.get());\
+                    group##x->AddRender(remote_id, frame_render);\
+                    CORE_LOG(INFO) << "group" << #x << " AddRender:" << remote_id;\
             }\
         }\
         virtual int OnEffect(uint64_t decider_remote_id, const std::string& process_type, std::vector<std::string>& args, uint64_t other_remote_id, const std::string& state_type, std::vector<std::string>& values){}\
+        virtual void OnConsumeItem(int succeed, uint64_t remote_id, uint64_t item_id, int count){\
+            CORE_LOG(INFO) << "OnConsumeItem:" << #x << " " << succeed << ", " << remote_id << " "<< item_id << " " << count;\
+        }\
+        virtual void OnObtainItem(int succeed, uint64_t remote_id, uint64_t item_id, int count){\
+            CORE_LOG(INFO) << "OnObtainItem:" << #x << " " << succeed << ", " << remote_id << " " << item_id << " " << count;\
+        }\
+        virtual void OnIterateItem(uint64_t remote_id, uint64_t item_id, int count){\
+            CORE_LOG(INFO) << "OnIterateItem:" << #x << " "<< remote_id << ", "<< item_id << ", " << count;\
+        }\
     };\
 }\
 std::unique_ptr<GObserver##x> group_observer##x = std::make_unique<GObserver##x>();
@@ -168,8 +142,10 @@ DECLARE_CAPTUTER_RENDER(2)
 
 int main(){
     RUN(1)
+    // std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));
     RUN(2)
 
-    cv.wait_for(ul, std::chrono::duration(std::chrono::milliseconds(5000)));
+    cv.wait_for(ul, std::chrono::duration(std::chrono::milliseconds(50000)));
+    CORE_LOG(INFO) << "main finished.";
     return 0;
 }

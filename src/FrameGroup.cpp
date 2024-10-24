@@ -48,10 +48,10 @@ void FrameGroup::DisConnect(){
     client_.DisConnect();
 }
 
-void FrameGroup::Login(){
-    if(id_) return;
+void FrameGroup::Login(uint64_t group_id){
     pframe::Login login;
     login.set_proto_type(pframe::ProtoType::LOGIN);
+    login.set_id(group_id);
     client_.Send(client_.client_bev_, login.SerializeAsString());
 }
 void FrameGroup::Logout(){
@@ -321,7 +321,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         pframe::Event event;
         event.ParseFromArray(data, *len);
 
-        CORE_LOG(INFO) << "event code:"<< event.code()<< " id:"  << event.id();
+        // CORE_LOG(INFO) << "event code:"<< event.code()<< " id:"  << event.id();
         
         if(event.code() == pframe::EventCode::LOGIN_SUCCEED){
             std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
@@ -331,8 +331,8 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
         }
         else if(event.code() == pframe::EventCode::LOGIN_FAILED || event.code() == pframe::EventCode::LOGOUT_SUCCEED){
             std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
-            id_ = 0;
             OnLogin(0, id_);
+            id_ = 0;
         }
         else if(event.code() == pframe::EventCode::REGISTERED_OBJECTS){
             pframe::RegisterObjects registered_objects;
