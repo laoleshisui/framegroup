@@ -190,12 +190,13 @@ void FrameGroup::ConsumeItem(uint64_t remote_id, uint64_t item_id, int count){
         client_.Send(client_.client_bev_, consume_item.SerializeAsString());
     }
 }
-void FrameGroup::ObtainItem(uint64_t remote_id, uint64_t item_id, int count){
+void FrameGroup::ObtainItem(uint64_t remote_id, uint64_t item_id, int count, std::string data){
     pframe::ObtainItem obtain_item;
     obtain_item.set_proto_type(pframe::ProtoType::OBTAIN_ITEM);
     obtain_item.mutable_item()->set_object_id(remote_id);
     obtain_item.mutable_item()->set_item_id(item_id);
     obtain_item.mutable_item()->set_count(count);
+    obtain_item.mutable_item()->set_data(std::move(data));
     {
         std::lock_guard<std::recursive_mutex> lock(objects_id_mutex_);
         client_.Send(client_.client_bev_, obtain_item.SerializeAsString());
@@ -465,7 +466,7 @@ void FrameGroup::RecvCB(acore::Server::Client* client, struct evbuffer* evb, u_i
             pframe::IterateItemsResp iterate_item_resp;
             iterate_item_resp.ParseFromString(event.data());
             for(const pframe::Item& item : iterate_item_resp.item()){
-                OnIterateItem(item.object_id(), item.item_id(), item.count());
+                OnIterateItem(item.object_id(), item.item_id(), item.count(), item.data());
             }
         }
     }
@@ -605,8 +606,8 @@ void FrameGroup::OnObtainItem(int succeed, uint64_t remote_id, uint64_t item_id,
         observer->OnObtainItem(succeed, remote_id, item_id, count);
     }
 }
-void FrameGroup::OnIterateItem(uint64_t remote_id, uint64_t item_id, int count){
+void FrameGroup::OnIterateItem(uint64_t remote_id, uint64_t item_id, int count, const std::string& data){
     for(FrameGroupObserver* observer : observers_){
-        observer->OnIterateItem(remote_id, item_id, count);
+        observer->OnIterateItem(remote_id, item_id, count, data);
     }
 }

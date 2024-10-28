@@ -80,8 +80,8 @@ void FrameGroupApi::SyncIFrames(uint64_t remote_id){
 void FrameGroupApi::ConsumeItem(uint64_t remote_id, uint64_t item_id, int count){
     return ((PIMPL*)pimpl_.get())->group_->ConsumeItem(remote_id, item_id, count);
 }
-void FrameGroupApi::ObtainItem(uint64_t remote_id, uint64_t item_id, int count){
-    return ((PIMPL*)pimpl_.get())->group_->ObtainItem(remote_id, item_id, count);
+void FrameGroupApi::ObtainItem(uint64_t remote_id, uint64_t item_id, int count, std::string data){
+    return ((PIMPL*)pimpl_.get())->group_->ObtainItem(remote_id, item_id, count, std::move(data));
 }
 void FrameGroupApi::IterateItems(uint64_t remote_id, uint64_t item_id){
     return ((PIMPL*)pimpl_.get())->group_->IterateItems(remote_id, item_id);

@@ -86,6 +86,10 @@ namespace{\
             CORE_LOG(INFO) << "OnEnterRoom:" << std::string(#x) << " enter " << room_id;\
             group##x->AddCaptureredObjects(#x, 1, true);\
             room_id_ = room_id;\
+            std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
+            group##x->ConsumeItem(remote_id_, 1, 10);\
+            std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
+            group##x->IterateItems(0, 0);\
         }\
         virtual void OnExitRoom(uint64_t room_id, uint64_t group_id, std::string type, uint64_t remote_id){\
             CORE_LOG(INFO) << "OnExitRoom:" << std::string(#x) << " exit " << room_id << "(is me :)" << (group_id_ == group_id);\
@@ -106,7 +110,7 @@ namespace{\
                 capturer_thread##x.detach();\
                 remote_id_ = remote_id;\
                 CORE_LOG(INFO) << "group" << #x << " AddCapturer:" << remote_id;\
-                group##x->ObtainItem(remote_id_, 1, 101);\
+                group##x->ObtainItem(remote_id_, 1, 101, "obtain_item" + std::string(#x));\
                 std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
                 group##x->ConsumeItem(remote_id_, 1, 10);\
                 std::this_thread::sleep_for(std::chrono::duration(std::chrono::milliseconds(CAPTURE_DELAY_MS)));\
@@ -125,8 +129,8 @@ namespace{\
         virtual void OnObtainItem(int succeed, uint64_t remote_id, uint64_t item_id, int count){\
             CORE_LOG(INFO) << "OnObtainItem:" << #x << " " << succeed << ", " << remote_id << " " << item_id << " " << count;\
         }\
-        virtual void OnIterateItem(uint64_t remote_id, uint64_t item_id, int count){\
-            CORE_LOG(INFO) << "OnIterateItem:" << #x << " "<< remote_id << ", "<< item_id << ", " << count;\
+        virtual void OnIterateItem(uint64_t remote_id, uint64_t item_id, int count, const std::string& data){\
+            CORE_LOG(INFO) << "OnIterateItem:" << #x << " "<< remote_id << ", "<< item_id << ", " << count << ", " << data;\
         }\
     };\
 }\
